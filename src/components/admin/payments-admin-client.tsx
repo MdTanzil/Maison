@@ -152,7 +152,7 @@ export function PaymentsAdminClient({
             <tbody className="divide-y divide-[#E8E0D9]">
               {payments.map((p) => (
                 <tr key={p.id} className="hover:bg-[#F5F1EE]/50">
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-3 whitespace-nowrap">
                     <Link
                       href={`/admin/orders/${p.orderId}`}
                       className="font-mono font-bold text-[#567C8D] hover:underline"
@@ -172,10 +172,10 @@ export function PaymentsAdminClient({
                       {p.transactionRef}
                     </span>
                   </td>
-                  <td className="py-3 px-3 font-bold text-[#2F4156]">
+                  <td className="py-3 px-3 font-bold text-[#2F4156] whitespace-nowrap">
                     {formatCurrency(p.amount)}
                   </td>
-                  <td className="py-3 px-3 font-semibold text-emerald-700">
+                  <td className="py-3 px-3 font-semibold text-emerald-700 whitespace-nowrap">
                     {formatCurrency(p.collectedCashAmount)}
                   </td>
                   <td className="py-3 px-3">
@@ -234,14 +234,14 @@ export function PaymentsAdminClient({
         ) : (
           <div className="divide-y divide-[#E8E0D9] text-xs">
             {refunds.map((r) => (
-              <div key={r.id} className="py-3 flex items-center justify-between">
-                <div>
-                  <span className="font-mono font-bold text-[#2F4156]">
+              <div key={r.id} className="py-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="font-mono font-bold text-[#2F4156] whitespace-nowrap">
                     {r.orderNumber}
                   </span>
                   <span className="text-[#52606D] ml-2">Reason: {r.reason}</span>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <span className="font-bold text-rose-700">
                     -{formatCurrency(r.amount)}
                   </span>
