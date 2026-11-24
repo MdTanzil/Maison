@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Lock, Mail, ArrowRight, ShieldCheck, KeyRound } from 'lucide-react';
 import { loginAction } from '@/actions/auth-actions';
 import { useStore } from '@/components/storefront/store-provider';
@@ -47,7 +46,6 @@ const DEMO_ROLES = [
 ];
 
 export default function LoginPage() {
-  const router = useRouter();
   const { showToast } = useStore();
   const [email, setEmail] = useState('admin@maisonbeige.com');
   const [password, setPassword] = useState('Admin@123');
@@ -68,8 +66,7 @@ export default function LoginPage() {
     }
 
     showToast('Welcome Back', `Signed in as ${res.user?.name}`, 'success');
-    router.push(res.redirectTo || '/');
-    router.refresh();
+    window.location.href = res.redirectTo || '/';
   };
 
   const handleQuickRoleSignIn = async (demoEmail: string, demoPass: string) => {
@@ -82,8 +79,7 @@ export default function LoginPage() {
 
     if (res.ok) {
       showToast('Role Session Active', `Signed in as ${res.user?.name}`, 'success');
-      router.push(res.redirectTo || '/');
-      router.refresh();
+      window.location.href = res.redirectTo || '/';
     } else {
       setError(res.error || 'Sign-in failed');
     }

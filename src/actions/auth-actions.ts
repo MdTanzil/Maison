@@ -70,7 +70,6 @@ export async function loginAction(rawInput: { email: string; password: string })
     });
   }
 
-  revalidatePath('/', 'layout');
   return {
     ok: true,
     redirectTo: isStaff ? '/admin' : '/account',
