@@ -6,6 +6,7 @@ import { Boxes, AlertTriangle, ArrowUpDown, History } from 'lucide-react';
 import { adjustInventoryAction } from '@/actions/catalog-actions';
 import { formatDate } from '@/lib/utils';
 import { useStore } from '@/components/storefront/store-provider';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 export function InventoryAdminClient({
   products,
@@ -253,13 +254,14 @@ export function InventoryAdminClient({
                 />
               </div>
 
-              <button
+              <LoadingButton
                 type="submit"
-                disabled={submitting}
-                className="w-full rounded-xl bg-[#567C8D] py-3 font-semibold text-white hover:bg-[#486878]"
+                loading={submitting}
+                loadingText="Recording Transaction..."
+                className="h-auto w-full rounded-xl bg-[#567C8D] py-3 font-semibold text-white hover:bg-[#486878]"
               >
-                {submitting ? 'Recording Transaction...' : 'Commit Inventory Transaction'}
-              </button>
+                Commit Inventory Transaction
+              </LoadingButton>
             </form>
           )}
         </div>
