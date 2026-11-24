@@ -12,6 +12,10 @@ interface TrackedOrder {
   status: string;
   paymentMethod: string;
   paymentStatus: string;
+  subtotal: number;
+  discountAmount: number;
+  shippingCharge: number;
+  couponCode: string | null;
   grandTotal: number;
   createdAt: string;
   items: Array<{
@@ -158,7 +162,25 @@ export default function TrackOrderPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-[#52606D]">Total Amount</p>
+                <p className="text-xs text-[#52606D]">Subtotal</p>
+                <p className="text-sm font-semibold text-[#2F4156]">
+                  {formatCurrency(order.subtotal)}
+                </p>
+                {order.discountAmount > 0 && (
+                  <>
+                    <p className="text-xs text-[#52606D] mt-2">
+                      Discount{order.couponCode ? ` (${order.couponCode})` : ''}
+                    </p>
+                    <p className="text-sm font-semibold text-[#567C8D]">
+                      -{formatCurrency(order.discountAmount)}
+                    </p>
+                  </>
+                )}
+                <p className="text-xs text-[#52606D] mt-2">Shipping</p>
+                <p className="text-sm font-semibold text-[#2F4156]">
+                  {order.shippingCharge === 0 ? 'Free' : formatCurrency(order.shippingCharge)}
+                </p>
+                <p className="text-xs text-[#52606D] mt-2">Total Amount</p>
                 <p className="text-sm font-bold text-[#2F4156]">
                   {formatCurrency(order.grandTotal)} ({order.paymentStatus})
                 </p>

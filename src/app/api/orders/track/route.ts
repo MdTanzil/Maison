@@ -38,6 +38,10 @@ export async function GET(request: NextRequest) {
       status: order.status,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
+      subtotal: Number(order.subtotal),
+      discountAmount: Number(order.discountAmount),
+      shippingCharge: Number(order.shippingCharge),
+      couponCode: order.couponCode,
       grandTotal: Number(order.grandTotal),
       createdAt: order.createdAt,
       items: order.items.map((i) => ({
