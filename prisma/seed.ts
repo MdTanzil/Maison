@@ -435,7 +435,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       name: 'Apparel & Tailoring',
       slug: 'apparel-tailoring',
       description: 'Breathable Belgian linen, mulberry silk, and relaxed architectural silhouettes.',
-      imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=80',
       seoTitle: 'Luxury Linen & Tailored Apparel | Maison Beige',
       sortOrder: 1,
     },
@@ -548,7 +548,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         Care: 'Dry clean or gentle cold steam',
       },
       images: [
-        'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=85',
         'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
@@ -585,8 +585,8 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         Hardware: 'Brushed Anti-Tarnish Brass',
       },
       images: [
-        'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85',
         'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
         { sku: 'MB-BAG-201-SAND', title: 'Sandstone Beige', size: 'One Size', color: 'Sandstone', colorHex: '#D8C8B8', stock: 9 },
@@ -655,8 +655,8 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         Strap: '20mm Italian Stitchless Nubuck Leather',
       },
       images: [
-        'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=85',
         'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
         { sku: 'MB-ACC-401-IVORY', title: 'Ivory Dial / Camel Strap', size: '38mm', color: 'Camel', colorHex: '#C19A6B', stock: 4 },
@@ -723,7 +723,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         Certification: 'OEKO-TEX Standard 100 Certified',
       },
       images: [
-        'https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1731404247714-f19f610b32d4?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
         { sku: 'MB-HOM-302-OAT', title: 'Undyed Oatmeal', size: '140x200cm', color: 'Oatmeal', colorHex: '#E6DEC8', stock: 3 },
@@ -756,7 +756,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         Materials: '18oz Waxed Belgian Linen Canvas & Full-Grain Calfskin',
       },
       images: [
-        'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1525103504173-8dc1582c7430?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
         { sku: 'MB-BAG-202-CANV', title: 'Sand Canvas & Cognac Leather', size: '40L Cabin', color: 'Sand / Cognac', colorHex: '#C2A886', stock: 11 },
