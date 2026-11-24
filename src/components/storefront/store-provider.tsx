@@ -207,7 +207,7 @@ export function StoreProvider({
     >
       {children}
       {/* Global Toast Notification Stack */}
-      <div className="no-print fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none">
+      <div className="no-print fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-[calc(100vw_-_2.5rem)] sm:w-full pointer-events-none">
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -218,14 +218,14 @@ export function StoreProvider({
             }`}
           >
             <div className="flex items-start justify-between gap-2">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#2F4156]">{t.title}</p>
                 {t.description && (
                   <p className="text-xs text-[#52606D] mt-0.5">{t.description}</p>
                 )}
               </div>
               <span
-                className={`h-2 w-2 rounded-full mt-1.5 ${
+                className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${
                   t.type === 'error' ? 'bg-rose-500' : 'bg-[#567C8D]'
                 }`}
               />
