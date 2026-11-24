@@ -3,7 +3,7 @@
 import bcrypt from 'bcryptjs';
 import { revalidatePath } from 'next/cache';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
-import { requirePermission } from '@/lib/auth/session';
+import { requireAuth, requirePermission } from '@/lib/auth/session';
 import { couponSchema, staffSchema } from '@/lib/validations/schemas';
 import { slugify } from '@/lib/utils';
 import { logStaffActivity } from '@/lib/services/audit';
@@ -606,4 +606,32 @@ export async function updateIntegrationCredentialsAction(data: IntegrationCreden
 
   revalidatePath('/admin/settings');
   return { ok: true };
+}
+
+// TEMPORARY (added 24 Nov 2026): one-time demo-data reset for a live re-seed.
+// Wipes ALL live data and re-runs the seed. Remove this action, the
+// DemoResetClient component and its Settings wiring after use.
+export async function resetDemoDataAction() {
+  await ensureDatabaseReady();
+  const admin = await requireAuth();
+  if (!admin.isSuperAdmin) {
+    return { ok: false, error: 'Only a Super Admin can reset the demo data.' };
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(
+      `TRUNCATE TABLE "User", "Account", "Session", "Role", "Permission", "RolePermission", "UserRole", "CustomerProfile", "StaffProfile", "Address", "Category", "Brand", "ProductTag", "Product", "ProductImage", "ProductVariant", "Inventory", "InventoryTransaction", "Cart", "CartItem", "Wishlist", "WishlistItem", "Order", "OrderItem", "OrderStatusHistory", "OrderAssignment", "Payment", "Refund", "ShippingMethod", "Shipment", "Coupon", "CouponUsage", "Review", "Notification", "StaffActivityLog", "WebsiteSettings" RESTART IDENTITY CASCADE;`
+    );
+
+    const { seedDatabase } = await import('../../prisma/seed');
+    await seedDatabase(prisma);
+
+    revalidatePath('/');
+    return { ok: true, message: 'Demo data has been reset and re-seeded.' };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Failed to reset the demo data.',
+    };
+  }
 }
