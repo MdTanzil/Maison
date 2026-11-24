@@ -132,7 +132,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
           onClick={handleWishlist}
           disabled={wishing}
           aria-label="Toggle Wishlist"
-          className={`absolute top-3 right-3 rounded-full p-2 transition-colors border ${
+          className={`absolute top-3 right-3 rounded-full p-2.5 sm:p-2 transition-colors border ${
             wished
               ? 'bg-[#567C8D] text-white border-[#567C8D]'
               : 'bg-white/90 text-[#2F4156] border-[#E8E0D9] hover:bg-white'
@@ -149,9 +149,9 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
       {/* Content */}
       <div className="flex flex-1 flex-col justify-between p-4">
         <div>
-          <div className="flex items-center justify-between text-[11px] text-[#52606D] mb-1">
-            <span className="uppercase tracking-wider">{product.categoryName}</span>
-            <span className="inline-flex items-center gap-1 text-[#2F4156]">
+          <div className="flex items-center justify-between gap-2 text-[11px] text-[#52606D] mb-1">
+            <span className="uppercase tracking-wider min-w-0 truncate">{product.categoryName}</span>
+            <span className="inline-flex items-center gap-1 text-[#2F4156] shrink-0">
               <Star className="h-3 w-3 fill-[#567C8D] text-[#567C8D]" />
               <span>{Number(product.ratingAverage ?? 4.9).toFixed(1)}</span>
             </span>
@@ -166,7 +166,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
         </div>
 
         <div className="mt-3 pt-3 border-t border-[#E8E0D9]/70">
-          <div className="flex items-baseline gap-2 mb-3">
+          <div className="flex flex-wrap items-baseline gap-2 mb-3">
             <span className="text-base font-bold text-[#2F4156]">
               {formatCurrency(effectivePrice)}
             </span>
@@ -182,7 +182,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
               type="button"
               disabled={product.stockQuantity <= 0 || adding}
               onClick={handleAddToCart}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#567C8D] px-3 py-2 text-xs font-medium text-white hover:bg-[#486878] disabled:opacity-50 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#567C8D] px-3 py-2.5 sm:py-2 text-xs font-medium text-white hover:bg-[#486878] disabled:opacity-50 transition-colors"
             >
               {adding ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -195,7 +195,7 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
               type="button"
               disabled={product.stockQuantity <= 0 || buying}
               onClick={handleBuyNow}
-              className="inline-flex items-center justify-center gap-1 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-2 text-xs font-medium text-[#2F4156] hover:bg-[#E8E0D9] disabled:opacity-50 transition-colors"
+              className="inline-flex items-center justify-center gap-1 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-2.5 sm:py-2 text-xs font-medium text-[#2F4156] hover:bg-[#E8E0D9] disabled:opacity-50 transition-colors"
             >
               {buying ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-[#567C8D]" />
