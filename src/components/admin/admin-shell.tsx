@@ -18,6 +18,7 @@ import {
   Settings,
   Printer,
   LogOut,
+  Loader2,
   Menu,
   X,
   ExternalLink,
@@ -66,6 +67,7 @@ export function AdminShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [quickSearch, setQuickSearch] = useState('');
+  const [signingOut, setSigningOut] = useState(false);
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (!item.permission) return true;
@@ -74,10 +76,15 @@ export function AdminShell({
   });
 
   const handleLogout = async () => {
-    await logoutAction();
-    showToast('Signed Out', 'Ended staff session safely.', 'info');
-    router.push('/auth/login');
-    router.refresh();
+    setSigningOut(true);
+    try {
+      await logoutAction();
+      showToast('Signed Out', 'Ended staff session safely.', 'info');
+      router.push('/auth/login');
+      router.refresh();
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   const handleQuickOrderSearch = (e: React.FormEvent) => {
@@ -175,10 +182,15 @@ export function AdminShell({
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium text-rose-700 hover:bg-rose-50 transition-colors"
+            disabled={signingOut}
+            className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium text-rose-700 hover:bg-rose-50 transition-colors disabled:opacity-60"
           >
-            <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Sign Out</span>}
+            {signingOut ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+              <LogOut className="h-4 w-4 shrink-0" />
+            )}
+            {!collapsed && <span>{signingOut ? 'Signing out...' : 'Sign Out'}</span>}
           </button>
         </div>
       </aside>
