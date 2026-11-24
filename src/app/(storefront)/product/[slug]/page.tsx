@@ -1,8 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { slugify } from '@/lib/utils';
 import { ProductDetailClient } from '@/components/storefront/product-detail-client';
 import { ProductCard } from '@/components/storefront/product-card';
 
@@ -28,6 +29,17 @@ export default async function ProductDetailPage({
   });
 
   if (!product) {
+    // A title-derived URL (e.g. /product/the-siena-...) has no exact slug
+    // match, because stored slugs drop leading words like "The". Resolve it
+    // to the product whose slugified title matches and send visitors to the
+    // canonical stored-slug URL instead of a dead 404.
+    const candidates = await prisma.product.findMany({
+      select: { slug: true, title: true },
+    });
+    const match = candidates.find((c) => slugify(c.title) === slug);
+    if (match) {
+      redirect(`/product/${match.slug}`);
+    }
     notFound();
   }
 
