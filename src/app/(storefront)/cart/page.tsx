@@ -229,15 +229,15 @@ export default function CartPage() {
               </div>
 
               {appliedCoupon && (
-                <div className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-800">
-                  <span className="inline-flex items-center gap-1.5 font-medium">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
+                <div className="flex items-center justify-between gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-xs text-emerald-800">
+                  <span className="inline-flex items-center gap-1.5 font-medium min-w-0">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                     {appliedCoupon.code} (-{formatCurrency(appliedCoupon.discountAmount)})
                   </span>
                   <button
                     type="button"
                     onClick={() => setAppliedCoupon(null)}
-                    className="underline font-semibold"
+                    className="underline font-semibold shrink-0"
                   >
                     Remove
                   </button>
