@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   CheckCircle2,
@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '@/components/storefront/store-provider';
 import { formatCurrency } from '@/lib/utils';
-import { placeOrderAction, validateCouponServerAction } from '@/actions/order-actions';
+import { placeOrderAction, validateCouponServerAction, getCheckoutProfileAction } from '@/actions/order-actions';
 
 export default function CheckoutPage() {
   const {
@@ -26,15 +26,13 @@ export default function CheckoutPage() {
     showToast,
   } = useStore();
 
-  const [customerName, setCustomerName] = useState('Samira Chowdhury');
-  const [customerPhone, setCustomerPhone] = useState('+8801819223344');
-  const [customerEmail, setCustomerEmail] = useState('customer@maisonbeige.com');
-  const [shippingAddressLine, setShippingAddressLine] = useState(
-    'Apt 5B, House 18, Road 27, Banani'
-  );
-  const [shippingArea, setShippingArea] = useState('Banani');
-  const [shippingCity, setShippingCity] = useState('Dhaka');
-  const [shippingPostalCode, setShippingPostalCode] = useState('1213');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [shippingAddressLine, setShippingAddressLine] = useState('');
+  const [shippingArea, setShippingArea] = useState('');
+  const [shippingCity, setShippingCity] = useState('');
+  const [shippingPostalCode, setShippingPostalCode] = useState('');
   const [shippingZone, setShippingZone] = useState<'INSIDE_CITY' | 'SUB_AREA' | 'OUTSIDE_CITY'>(
     'INSIDE_CITY'
   );
@@ -53,6 +51,31 @@ export default function CheckoutPage() {
     trackingNumber: string;
     grandTotal: number;
   } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getCheckoutProfileAction().then((res) => {
+      if (cancelled || !res.ok || !res.profile) return;
+      const p = res.profile;
+      setCustomerName((prev) => prev || p.name);
+      setCustomerPhone((prev) => prev || p.phone);
+      setCustomerEmail((prev) => prev || p.email);
+      setShippingAddressLine((prev) => prev || p.addressLine1);
+      setShippingArea((prev) => prev || p.area);
+      setShippingCity((prev) => prev || p.city);
+      setShippingPostalCode((prev) => prev || p.postalCode);
+      if (
+        p.zoneType === 'INSIDE_CITY' ||
+        p.zoneType === 'SUB_AREA' ||
+        p.zoneType === 'OUTSIDE_CITY'
+      ) {
+        setShippingZone(p.zoneType);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const baseShipping =

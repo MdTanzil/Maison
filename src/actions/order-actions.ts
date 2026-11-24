@@ -85,6 +85,41 @@ export async function validateCouponServerAction(params: {
   };
 }
 
+export async function getCheckoutProfileAction() {
+  await ensureDatabaseReady();
+  const sessionUser = await getCurrentUser();
+  if (!sessionUser) {
+    return { ok: true, profile: null };
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    include: {
+      addresses: { orderBy: { isDefault: 'desc' } },
+    },
+  });
+
+  if (!dbUser) {
+    return { ok: true, profile: null };
+  }
+
+  const defaultAddress = dbUser.addresses[0] ?? null;
+
+  return {
+    ok: true,
+    profile: {
+      name: dbUser.name,
+      email: dbUser.email,
+      phone: dbUser.phone || '',
+      addressLine1: defaultAddress?.addressLine1 || '',
+      area: defaultAddress?.area || '',
+      city: defaultAddress?.city || '',
+      postalCode: defaultAddress?.postalCode || '',
+      zoneType: defaultAddress?.zoneType || 'INSIDE_CITY',
+    },
+  };
+}
+
 export async function placeOrderAction(rawInput: unknown) {
   await ensureDatabaseReady();
   const parsed = checkoutSchema.safeParse(rawInput);
