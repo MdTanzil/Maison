@@ -679,7 +679,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       costPrice: 4100,
       categoryId: catApparel.id,
       brandId: brandMaison.id,
-      stockQuantity: 22,
+      stockQuantity: 36,
       lowStockThreshold: 5,
       isFeatured: false,
       isBestSeller: true,
@@ -697,8 +697,10 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
+        { sku: 'MB-APR-102-S-PEARL', title: 'Small / Pearl Beige', size: 'S', color: 'Pearl Beige', colorHex: '#F3ECE3', stock: 8 },
         { sku: 'MB-APR-102-M-PEARL', title: 'Medium / Pearl Beige', size: 'M', color: 'Pearl Beige', colorHex: '#F3ECE3', stock: 12 },
         { sku: 'MB-APR-102-L-TEAL', title: 'Large / Muted Teal', size: 'L', color: 'Muted Teal', colorHex: '#567C8D', stock: 10 },
+        { sku: 'MB-APR-102-XL-TEAL', title: 'Extra Large / Muted Teal', size: 'XL', color: 'Muted Teal', colorHex: '#567C8D', stock: 6 },
       ],
     },
     {
@@ -782,7 +784,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       costPrice: 3100,
       categoryId: catApparel.id,
       brandId: brandAurelia.id,
-      stockQuantity: 19,
+      stockQuantity: 33,
       lowStockThreshold: 5,
       isFeatured: false,
       isBestSeller: true,
@@ -802,6 +804,8 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       variants: [
         { sku: 'MB-APR-103-S-IVR', title: 'Small (30) / Warm Ivory', size: 'S', color: 'Warm Ivory', colorHex: '#F5F1EE', stock: 9 },
         { sku: 'MB-APR-103-M-IVR', title: 'Medium (32) / Warm Ivory', size: 'M', color: 'Warm Ivory', colorHex: '#F5F1EE', stock: 10 },
+        { sku: 'MB-APR-103-L-IVR', title: 'Large (34) / Warm Ivory', size: 'L', color: 'Warm Ivory', colorHex: '#F5F1EE', stock: 8 },
+        { sku: 'MB-APR-103-XL-IVR', title: 'Extra Large (36) / Warm Ivory', size: 'XL', color: 'Warm Ivory', colorHex: '#F5F1EE', stock: 6 },
       ],
     },
   ];
