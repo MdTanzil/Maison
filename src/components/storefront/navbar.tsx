@@ -15,6 +15,7 @@ import {
   Sparkles,
   LogOut,
   LayoutDashboard,
+  Loader2,
 } from 'lucide-react';
 import { useStore } from './store-provider';
 import { logoutAction } from '@/actions/auth-actions';
@@ -36,6 +37,7 @@ export function StorefrontNavbar({
   const { itemCount, wishlistIds, showToast } = useStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,10 +50,15 @@ export function StorefrontNavbar({
   };
 
   const handleLogout = async () => {
-    await logoutAction();
-    showToast('Signed Out', 'You have been signed out safely.', 'info');
-    router.push('/');
-    router.refresh();
+    setSigningOut(true);
+    try {
+      await logoutAction();
+      showToast('Signed Out', 'You have been signed out safely.', 'info');
+      router.push('/');
+      router.refresh();
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   const navLinks = [
@@ -170,10 +177,15 @@ export function StorefrontNavbar({
                 <button
                   type="button"
                   onClick={handleLogout}
+                  disabled={signingOut}
                   title="Sign Out"
-                  className="rounded-full p-2 text-[#52606D] hover:text-rose-600 hover:bg-white transition-colors"
+                  className="rounded-full p-2 text-[#52606D] hover:text-rose-600 hover:bg-white transition-colors disabled:opacity-60"
                 >
-                  <LogOut className="h-4 w-4" />
+                  {signingOut ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             ) : (
