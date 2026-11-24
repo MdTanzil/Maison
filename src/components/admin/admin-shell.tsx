@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -68,11 +68,14 @@ export function AdminShell({
   const [collapsed, setCollapsed] = useState(false);
   const [quickSearch, setQuickSearch] = useState('');
   const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [isNavigating, startTransition] = useTransition();
 
-  // Clear the nav spinner once the new page has loaded.
+  // Clear the nav spinner once the route transition has settled. Do NOT clear
+  // on pathname change: App Router updates the URL at navigation start, so a
+  // pathname effect would kill the spinner before the new page renders.
   useEffect(() => {
-    setPendingHref(null);
-  }, [pathname]);
+    if (!isNavigating) setPendingHref(null);
+  }, [isNavigating]);
   const [signingOut, setSigningOut] = useState(false);
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
@@ -97,6 +100,29 @@ export function AdminShell({
     e.preventDefault();
     if (!quickSearch.trim()) return;
     router.push(`/admin/orders?q=${encodeURIComponent(quickSearch.trim())}`);
+  };
+
+  // Navigate inside a transition so the clicked nav item shows a spinner until
+  // the new route actually renders. Plain left-clicks only — modifier keys,
+  // middle-clicks and right-clicks keep native Link behavior (new tab, etc.).
+  const handleNavClick = (e: React.MouseEvent, href: string) => {
+    setSidebarOpen(false);
+    if (href === pathname) return;
+    if (
+      e.defaultPrevented ||
+      e.button !== 0 ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey
+    ) {
+      return;
+    }
+    e.preventDefault();
+    setPendingHref(href);
+    startTransition(() => {
+      router.push(href);
+    });
   };
 
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -161,10 +187,7 @@ export function AdminShell({
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => {
-                  setSidebarOpen(false);
-                  if (item.href !== pathname) setPendingHref(item.href);
-                }}
+                onClick={(e) => handleNavClick(e, item.href)}
                 className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all ${
                   isActive
                     ? 'bg-[#567C8D] text-white shadow-sm'
@@ -172,7 +195,7 @@ export function AdminShell({
                 }`}
                 title={item.label}
               >
-                {pendingHref === item.href ? (
+                {isNavigating && pendingHref === item.href ? (
                   <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
                 ) : (
                   <Icon className="h-4 w-4 shrink-0" />
@@ -255,10 +278,10 @@ export function AdminShell({
           <div className="flex items-center gap-3">
             <Link
               href="/admin/orders/print-bulk"
-              onClick={() => setPendingHref('/admin/orders/print-bulk')}
+              onClick={(e) => handleNavClick(e, '/admin/orders/print-bulk')}
               className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2 text-xs font-medium text-[#2F4156] hover:border-[#567C8D]"
             >
-              {pendingHref === '/admin/orders/print-bulk' ? (
+              {isNavigating && pendingHref === '/admin/orders/print-bulk' ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-[#567C8D]" />
               ) : (
                 <Printer className="h-3.5 w-3.5 text-[#567C8D]" />
