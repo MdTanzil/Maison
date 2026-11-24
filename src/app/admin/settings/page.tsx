@@ -3,7 +3,6 @@ import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { SettingsAdminClient } from '@/components/admin/settings-admin-client';
 import { CredentialsAdminClient } from '@/components/admin/credentials-admin-client';
-import { DemoResetClient } from '@/components/admin/demo-reset-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +74,6 @@ export default async function AdminSettingsPage() {
           }}
         />
       )}
-      {sessionUser?.isSuperAdmin && <DemoResetClient />}
     </div>
   );
 }
