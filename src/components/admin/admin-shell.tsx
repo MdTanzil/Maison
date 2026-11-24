@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -52,6 +52,12 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/settings', label: 'Website Settings', icon: Settings, permission: 'settings.manage' },
 ];
 
+// Minimum time the nav spinner stays visible after a click, in milliseconds.
+// Admin routes render a loading.tsx fallback almost immediately, which settles
+// the navigation transition in milliseconds — without a floor the spinner
+// would never be seen.
+const NAV_SPINNER_MIN_MS = 1200;
+
 export function AdminShell({
   user,
   storeName = 'MAISON BEIGE',
@@ -69,13 +75,24 @@ export function AdminShell({
   const [quickSearch, setQuickSearch] = useState('');
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [isNavigating, startTransition] = useTransition();
+  const pendingSinceRef = useRef<number | null>(null);
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Clear the nav spinner once the route transition has settled. Do NOT clear
-  // on pathname change: App Router updates the URL at navigation start, so a
-  // pathname effect would kill the spinner before the new page renders.
+  // Clear the nav spinner once the route transition has settled — but never
+  // before it has been visible for at least NAV_SPINNER_MIN_MS. The admin
+  // routes have a loading.tsx boundary, so the transition commits as soon as
+  // the loading fallback renders and isNavigating flips false within
+  // milliseconds; without the minimum the spinner never shows. Do NOT clear
+  // on pathname change: App Router updates the URL at navigation start.
   useEffect(() => {
-    if (!isNavigating) setPendingHref(null);
-  }, [isNavigating]);
+    if (isNavigating || !pendingHref) return;
+    const elapsed = Date.now() - (pendingSinceRef.current ?? 0);
+    const remaining = Math.max(0, NAV_SPINNER_MIN_MS - elapsed);
+    clearTimerRef.current = setTimeout(() => setPendingHref(null), remaining);
+    return () => {
+      if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+    };
+  }, [isNavigating, pendingHref]);
   const [signingOut, setSigningOut] = useState(false);
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
@@ -119,6 +136,8 @@ export function AdminShell({
       return;
     }
     e.preventDefault();
+    if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+    pendingSinceRef.current = Date.now();
     setPendingHref(href);
     startTransition(() => {
       router.push(href);
@@ -195,7 +214,7 @@ export function AdminShell({
                 }`}
                 title={item.label}
               >
-                {isNavigating && pendingHref === item.href ? (
+                {pendingHref === item.href ? (
                   <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
                 ) : (
                   <Icon className="h-4 w-4 shrink-0" />
@@ -281,7 +300,7 @@ export function AdminShell({
               onClick={(e) => handleNavClick(e, '/admin/orders/print-bulk')}
               className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2 text-xs font-medium text-[#2F4156] hover:border-[#567C8D]"
             >
-              {isNavigating && pendingHref === '/admin/orders/print-bulk' ? (
+              {pendingHref === '/admin/orders/print-bulk' ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-[#567C8D]" />
               ) : (
                 <Printer className="h-3.5 w-3.5 text-[#567C8D]" />
