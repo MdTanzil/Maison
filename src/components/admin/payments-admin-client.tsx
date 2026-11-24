@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, ShieldCheck, Banknote, RotateCcw } from 'lucide-react';
@@ -8,6 +8,15 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { verifyPaymentAction } from '@/actions/order-actions';
 import { useStore } from '@/components/storefront/store-provider';
 import { GatewayStatus } from '@/lib/services/integrations';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function PaymentsAdminClient({
   payments,
@@ -44,6 +53,19 @@ export function PaymentsAdminClient({
 }) {
   const router = useRouter();
   const { showToast } = useStore();
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
 
   const handleQuickVerify = async (orderId: string, orderNumber: string, amount: number) => {
     const res = await verifyPaymentAction({
@@ -173,7 +195,13 @@ export function PaymentsAdminClient({
                         <button
                           type="button"
                           onClick={() =>
-                            handleQuickVerify(p.orderId, p.orderNumber, p.amount)
+                            setConfirm({
+                              title: 'Verify Payment',
+                              message: `Mark the payment for ${p.orderNumber} (${formatCurrency(p.amount)}) as verified? This confirms the money was received.`,
+                              confirmLabel: 'Verify Payment',
+                              onConfirm: () =>
+                                handleQuickVerify(p.orderId, p.orderNumber, p.amount),
+                            })
                           }
                           className="inline-flex items-center gap-1 rounded-lg bg-[#567C8D] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#486878]"
                         >
@@ -226,6 +254,17 @@ export function PaymentsAdminClient({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }
