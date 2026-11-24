@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layers, Plus, Trash2 } from 'lucide-react';
 import {
@@ -20,31 +20,49 @@ type PendingConfirm = {
   onConfirm: () => Promise<void>;
 };
 
+type CategoryRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  parentId: string | null;
+  parentName: string | null;
+  isActive: boolean;
+  productCount: number;
+};
+
+type BrandRow = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  isActive: boolean;
+  productCount: number;
+};
+
 export function CategoriesAdminClient({
   categories,
   brands,
 }: {
-  categories: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    description: string;
-    parentId: string | null;
-    parentName: string | null;
-    isActive: boolean;
-    productCount: number;
-  }>;
-  brands: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    description: string;
-    isActive: boolean;
-    productCount: number;
-  }>;
+  categories: CategoryRow[];
+  brands: BrandRow[];
 }) {
   const router = useRouter();
   const { showToast } = useStore();
+
+  // Local copies of the lists so create/delete update the UI immediately —
+  // router.refresh() reconciles with the server afterwards, but its RSC
+  // round-trip can take seconds on a cold serverless function.
+  const [categoryRows, setCategoryRows] = useState(categories);
+  const [brandRows, setBrandRows] = useState(brands);
+
+  useEffect(() => {
+    setCategoryRows(categories);
+  }, [categories]);
+
+  useEffect(() => {
+    setBrandRows(brands);
+  }, [brands]);
 
   const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -82,6 +100,20 @@ export function CategoriesAdminClient({
         showToast('Category Saved', `Added "${catName}" to catalog hierarchy.`);
         setCatName('');
         setCatDesc('');
+        const saved = res.category;
+        if (saved) {
+          setCategoryRows((rows) => {
+            const row: CategoryRow = {
+              ...saved,
+              parentName: saved.parentId
+                ? rows.find((r) => r.id === saved.parentId)?.name ?? null
+                : null,
+            };
+            return rows.some((r) => r.id === row.id)
+              ? rows.map((r) => (r.id === row.id ? row : r))
+              : [...rows, row];
+          });
+        }
         router.refresh();
       }
     } finally {
@@ -96,6 +128,7 @@ export function CategoriesAdminClient({
       return;
     }
     showToast('Category Deleted', 'Removed category from catalog.', 'info');
+    setCategoryRows((rows) => rows.filter((c) => c.id !== id));
     router.refresh();
   };
 
@@ -111,6 +144,14 @@ export function CategoriesAdminClient({
         showToast('Brand Saved', `Added "${brandName}" to brands.`);
         setBrandName('');
         setBrandDesc('');
+        const saved = res.brand;
+        if (saved) {
+          setBrandRows((rows) =>
+            rows.some((r) => r.id === saved.id)
+              ? rows.map((r) => (r.id === saved.id ? saved : r))
+              : [...rows, saved]
+          );
+        }
         router.refresh();
       }
     } finally {
@@ -134,10 +175,10 @@ export function CategoriesAdminClient({
         <div className="lg:col-span-7 space-y-6">
           <div className="rounded-2xl border border-[#E8E0D9] bg-white p-6 shadow-luxury space-y-4">
             <h2 className="font-serif text-lg font-semibold text-[#2F4156]">
-              Hierarchical Categories ({categories.length})
+              Hierarchical Categories ({categoryRows.length})
             </h2>
             <div className="divide-y divide-[#E8E0D9] text-xs">
-              {categories.map((c) => (
+              {categoryRows.map((c) => (
                 <div
                   key={c.id}
                   className="py-3 flex items-center justify-between gap-4"
@@ -178,10 +219,10 @@ export function CategoriesAdminClient({
 
           <div className="rounded-2xl border border-[#E8E0D9] bg-white p-6 shadow-luxury space-y-4">
             <h2 className="font-serif text-lg font-semibold text-[#2F4156]">
-              Atelier Brands ({brands.length})
+              Atelier Brands ({brandRows.length})
             </h2>
             <div className="divide-y divide-[#E8E0D9] text-xs">
-              {brands.map((b) => (
+              {brandRows.map((b) => (
                 <div key={b.id} className="py-3 flex items-center justify-between">
                   <div>
                     <p className="font-bold text-[#2F4156]">{b.name}</p>
@@ -228,7 +269,7 @@ export function CategoriesAdminClient({
                 className="w-full rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2"
               >
                 <option value="">None (Top-Level Department)</option>
-                {categories.map((c) => (
+                {categoryRows.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
