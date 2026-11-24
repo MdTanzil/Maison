@@ -5,14 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
-  Printer,
   FileText,
   Receipt,
   CheckCircle2,
   UserPlus,
-  Truck,
-  CreditCard,
-  RotateCcw,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
@@ -22,7 +18,17 @@ import {
   processOrderRefundAction,
 } from '@/actions/order-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { OrderStatus, PaymentStatus, CourierProvider } from '@prisma/client';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function OrderDetailClient({
   order,
@@ -119,6 +125,7 @@ export function OrderDetailClient({
     'MODERATOR' | 'ORDER_PROCESSING' | 'DELIVERY_STAFF'
   >('MODERATOR');
   const [assignNotes, setAssignNotes] = useState('');
+  const [assigning, setAssigning] = useState(false);
 
   // Payment Verification & Refund
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(order.paymentStatus);
@@ -127,6 +134,22 @@ export function OrderDetailClient({
     String(order.payment?.collectedCashAmount || order.grandTotal)
   );
   const [refundReason, setRefundReason] = useState('');
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+
+  // Shared confirmation dialog
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
 
   const handleSaveStatus = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,49 +175,66 @@ export function OrderDetailClient({
 
   const handleAssignStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await assignOrderToStaffAction({
-      orderId: order.id,
-      staffId: assignStaffId,
-      roleType: assignRoleType,
-      notes: assignNotes,
-    });
-    if (res.ok) {
-      showToast('Staff Assigned', 'Assigned order to staff member.', 'success');
-      setAssignNotes('');
-      router.refresh();
+    setAssigning(true);
+    try {
+      const res = await assignOrderToStaffAction({
+        orderId: order.id,
+        staffId: assignStaffId,
+        roleType: assignRoleType,
+        notes: assignNotes,
+      });
+      if (res.ok) {
+        showToast('Staff Assigned', 'Assigned order to staff member.', 'success');
+        setAssignNotes('');
+        router.refresh();
+      }
+    } finally {
+      setAssigning(false);
     }
   };
 
   const handleVerifyPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await verifyPaymentAction({
-      orderId: order.id,
-      paymentStatus,
-      transactionRef: trxRef,
-      collectedCashAmount: Number(collectedCash) || 0,
-    });
-    if (res.ok) {
-      showToast('Payment Updated', `Marked payment as ${paymentStatus}`, 'success');
-      router.refresh();
+    setVerifyingPayment(true);
+    try {
+      const res = await verifyPaymentAction({
+        orderId: order.id,
+        paymentStatus,
+        transactionRef: trxRef,
+        collectedCashAmount: Number(collectedCash) || 0,
+      });
+      if (res.ok) {
+        showToast('Payment Updated', `Marked payment as ${paymentStatus}`, 'success');
+        router.refresh();
+      }
+    } finally {
+      setVerifyingPayment(false);
     }
   };
 
-  const handleProcessRefund = async () => {
+  const handleProcessRefund = () => {
     if (!refundReason.trim()) {
       showToast('Reason Required', 'Enter a reason before processing refund.', 'error');
       return;
     }
-    const res = await processOrderRefundAction({
-      orderId: order.id,
-      amount: order.grandTotal,
-      reason: refundReason,
-      restockItems: true,
+    setConfirm({
+      title: 'Process Refund',
+      message: `Issue a full refund of ${formatCurrency(order.grandTotal)} for order ${order.orderNumber} and restock its items?`,
+      confirmLabel: 'Process Refund',
+      onConfirm: async () => {
+        const res = await processOrderRefundAction({
+          orderId: order.id,
+          amount: order.grandTotal,
+          reason: refundReason,
+          restockItems: true,
+        });
+        if (res.ok) {
+          showToast('Refund Processed', 'Order refunded and inventory restored.', 'info');
+          setRefundReason('');
+          router.refresh();
+        }
+      },
     });
-    if (res.ok) {
-      showToast('Refund Processed', 'Order refunded and inventory restored.', 'info');
-      setRefundReason('');
-      router.refresh();
-    }
   };
 
   return (
@@ -471,13 +511,14 @@ export function OrderDetailClient({
                 />
               </div>
 
-              <button
+              <LoadingButton
                 type="submit"
-                disabled={updatingStatus}
-                className="w-full rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
+                loading={updatingStatus}
+                loadingText="Updating..."
+                className="h-auto w-full rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
               >
-                {updatingStatus ? 'Updating...' : 'Save Order Status & Sync Inventory'}
-              </button>
+                Save Order Status &amp; Sync Inventory
+              </LoadingButton>
             </form>
           )}
 
@@ -539,13 +580,15 @@ export function OrderDetailClient({
                 className="w-full rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-2 text-xs"
               />
 
-              <button
+              <LoadingButton
                 type="submit"
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#2F4156] py-2.5 text-xs font-semibold text-white hover:opacity-90"
+                loading={assigning}
+                loadingText="Assigning..."
+                className="h-auto w-full gap-1.5 rounded-xl bg-[#2F4156] py-2.5 text-xs font-semibold text-white hover:opacity-90"
               >
                 <UserPlus className="h-3.5 w-3.5" />
                 <span>Assign Staff Member</span>
-              </button>
+              </LoadingButton>
 
               {order.assignments.length > 0 && (
                 <div className="pt-2 border-t border-[#E8E0D9] space-y-1.5 text-xs">
@@ -612,12 +655,14 @@ export function OrderDetailClient({
                   className="w-full rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-2 text-xs font-mono"
                 />
 
-                <button
+                <LoadingButton
                   type="submit"
-                  className="w-full rounded-xl bg-[#567C8D] py-2 text-xs font-semibold text-white hover:bg-[#486878]"
+                  loading={verifyingPayment}
+                  loadingText="Verifying..."
+                  className="h-auto w-full rounded-xl bg-[#567C8D] py-2 text-xs font-semibold text-white hover:bg-[#486878]"
                 >
                   Verify &amp; Save Payment Record
-                </button>
+                </LoadingButton>
               </form>
 
               <div className="border-t border-[#E8E0D9] pt-4 space-y-2">
@@ -645,6 +690,17 @@ export function OrderDetailClient({
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }
