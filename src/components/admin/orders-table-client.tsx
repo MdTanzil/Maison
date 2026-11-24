@@ -94,7 +94,7 @@ export function OrdersTableClient({
       if (statusFilter && o.status !== statusFilter) return false;
       if (paymentFilter && o.paymentStatus !== paymentFilter) return false;
       if (staffFilter && !o.assignedStaff.some((s) => s.id === staffFilter)) return false;
-      if (dateFilter && !o.createdAt.startsWith(dateFilter)) return false;
+      if (dateFilter && new Date(o.createdAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }) !== dateFilter) return false;
       return true;
     });
   }, [orders, search, statusFilter, paymentFilter, staffFilter, dateFilter]);

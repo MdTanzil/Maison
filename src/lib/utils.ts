@@ -28,12 +28,14 @@ export function formatDate(date: Date | string | null | undefined, includeTime =
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'Asia/Dhaka',
     });
   }
   return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: '2-digit',
+    timeZone: 'Asia/Dhaka',
   });
 }
 
