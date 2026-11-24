@@ -13,7 +13,9 @@ import {
   RefreshCw,
   Minus,
   Plus,
+  Loader2,
 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { useStore } from './store-provider';
 import { formatCurrency } from '@/lib/utils';
 import { submitProductReviewAction } from '@/actions/catalog-actions';
@@ -72,6 +74,9 @@ export function ProductDetailClient({
     product.variants[0] || null
   );
   const [quantity, setQuantity] = useState(1);
+  const [adding, setAdding] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [wishing, setWishing] = useState(false);
 
   // Review state
   const [reviewName, setReviewName] = useState('');
@@ -107,12 +112,24 @@ export function ProductDetailClient({
       quantity,
       maxStock: currentStock,
     });
+    // Brief visible feedback for the instant local add-to-bag action.
+    setAdding(true);
+    setTimeout(() => setAdding(false), 600);
+  };
+
+  const handleWishlist = () => {
+    setWishing(true);
+    toggleWishlist(product.id, product.title);
+    setTimeout(() => setWishing(false), 500);
   };
 
   const handleBuyNow = () => {
     if (currentStock <= 0) return;
     handleAdd();
+    setBuying(true);
     router.push('/checkout');
+    // Safety: clear the spinner if navigation does not happen.
+    setTimeout(() => setBuying(false), 5000);
   };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
@@ -302,25 +319,34 @@ export function ProductDetailClient({
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   type="button"
-                  disabled={currentStock <= 0}
+                  disabled={currentStock <= 0 || adding}
                   onClick={handleAdd}
                   className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[#567C8D] px-6 py-3.5 text-sm font-semibold text-white hover:bg-[#486878] disabled:opacity-50 transition-colors"
                 >
-                  <ShoppingBag className="h-4 w-4" />
-                  <span>Add to Shopping Bag</span>
+                  {adding ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShoppingBag className="h-4 w-4" />
+                  )}
+                  <span>{adding ? 'Adding...' : 'Add to Shopping Bag'}</span>
                 </button>
                 <button
                   type="button"
-                  disabled={currentStock <= 0}
+                  disabled={currentStock <= 0 || buying}
                   onClick={handleBuyNow}
                   className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-[#567C8D] bg-[#C8D9E6]/60 px-6 py-3.5 text-sm font-semibold text-[#2F4156] hover:bg-[#C8D9E6] disabled:opacity-50 transition-colors"
                 >
-                  <Zap className="h-4 w-4 text-[#567C8D]" />
-                  <span>Buy It Now</span>
+                  {buying ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-[#567C8D]" />
+                  ) : (
+                    <Zap className="h-4 w-4 text-[#567C8D]" />
+                  )}
+                  <span>{buying ? 'Going to Checkout...' : 'Buy It Now'}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => toggleWishlist(product.id, product.title)}
+                  onClick={handleWishlist}
+                  disabled={wishing}
                   aria-label="Save to Wishlist"
                   className={`inline-flex items-center justify-center rounded-xl border px-4 py-3.5 transition-colors ${
                     wished
@@ -328,7 +354,11 @@ export function ProductDetailClient({
                       : 'border-[#E8E0D9] bg-[#F5F1EE] text-[#2F4156] hover:border-[#567C8D]'
                   }`}
                 >
-                  <Heart className={`h-5 w-5 ${wished ? 'fill-current' : ''}`} />
+                  {wishing ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Heart className={`h-5 w-5 ${wished ? 'fill-current' : ''}`} />
+                  )}
                 </button>
               </div>
             </div>
@@ -485,13 +515,14 @@ export function ProductDetailClient({
               />
             </div>
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={submittingReview}
-              className="w-full rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878] disabled:opacity-50"
+              loading={submittingReview}
+              loadingText="Submitting..."
+              className="h-auto w-full rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
             >
-              {submittingReview ? 'Submitting...' : 'Publish Verified Review'}
-            </button>
+              Publish Verified Review
+            </LoadingButton>
           </form>
         </div>
       </div>
