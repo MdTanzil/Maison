@@ -255,15 +255,15 @@ export function InvoicePrintView({
     <div className="space-y-6">
       {/* Control Bar (Hidden when printing) */}
       <div className="no-print rounded-2xl border border-[#E8E0D9] bg-white p-4 sm:p-5 shadow-luxury flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2 text-xs font-semibold text-[#2F4156] hover:border-[#567C8D]"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2 text-xs font-semibold text-[#2F4156] hover:border-[#567C8D] shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Back</span>
           </Link>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-sm sm:text-base font-bold text-[#2F4156]">
               Invoice &amp; Order Memo Studio ({orders.length}{' '}
               {orders.length === 1 ? 'Order' : 'Orders'})
@@ -330,7 +330,7 @@ export function InvoicePrintView({
             /* A4 PROFESSIONAL INVOICE LAYOUT */
             <div
               key={order.id}
-              className={`print-a4 mx-auto max-w-4xl rounded-2xl border border-[#E8E0D9] bg-white p-8 sm:p-12 shadow-luxury ${
+              className={`print-a4 mx-auto max-w-4xl rounded-2xl border border-[#E8E0D9] bg-white p-5 sm:p-12 shadow-luxury ${
                 idx < orders.length - 1 ? 'page-break' : ''
               }`}
             >
@@ -392,25 +392,25 @@ export function InvoicePrintView({
                   <p className="font-bold uppercase tracking-wider text-[#567C8D] mb-1.5">
                     Payment &amp; Logistics Details
                   </p>
-                  <div className="flex justify-between">
-                    <span className="text-[#52606D]">Payment Method:</span>
-                    <span className="font-semibold text-[#2F4156]">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-[#52606D] shrink-0">Payment Method:</span>
+                    <span className="font-semibold text-[#2F4156] text-right">
                       {order.paymentMethod}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#52606D]">Payment Status:</span>
-                    <span className="font-bold text-[#567C8D]">{order.paymentStatus}</span>
+                  <div className="flex justify-between gap-3">
+                    <span className="text-[#52606D] shrink-0">Payment Status:</span>
+                    <span className="font-bold text-[#567C8D] text-right">{order.paymentStatus}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#52606D]">Courier Service:</span>
-                    <span className="font-semibold text-[#2F4156]">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-[#52606D] shrink-0">Courier Service:</span>
+                    <span className="font-semibold text-[#2F4156] text-right">
                       {order.courierProvider || 'INTERNAL_DELIVERY'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#52606D]">Tracking / Consignment:</span>
-                    <span className="font-mono font-bold text-[#2F4156]">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-[#52606D] shrink-0">Tracking / Consignment:</span>
+                    <span className="font-mono font-bold text-[#2F4156] text-right break-all">
                       {order.trackingNumber || 'Pending Assignment'}
                     </span>
                   </div>
@@ -423,7 +423,7 @@ export function InvoicePrintView({
               </div>
 
               {/* Product Table */}
-              <div className="py-6">
+              <div className="py-6 overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="border-b-2 border-[#E8E0D9] bg-[#F5F1EE] text-[#2F4156]">
