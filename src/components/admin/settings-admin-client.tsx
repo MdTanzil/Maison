@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Save, Settings } from 'lucide-react';
 import { updateWebsiteSettingsAction } from '@/actions/admin-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 export function SettingsAdminClient({
   initialSettings,
@@ -69,14 +70,15 @@ export function SettingsAdminClient({
           </h1>
         </div>
 
-        <button
+        <LoadingButton
           type="submit"
-          disabled={saving}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#567C8D] px-6 py-3 text-xs font-semibold text-white hover:bg-[#486878]"
+          loading={saving}
+          loadingText="Saving Settings..."
+          className="h-auto inline-flex items-center gap-2 rounded-xl bg-[#567C8D] px-6 py-3 text-xs font-semibold text-white hover:bg-[#486878]"
         >
           <Save className="h-4 w-4" />
-          <span>{saving ? 'Saving Settings...' : 'Save Global Settings'}</span>
-        </button>
+          <span>Save Global Settings</span>
+        </LoadingButton>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-xs">
