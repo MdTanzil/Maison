@@ -15,6 +15,7 @@ import {
 import { useStore } from '@/components/storefront/store-provider';
 import { formatCurrency } from '@/lib/utils';
 import { validateCouponServerAction } from '@/actions/order-actions';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 export default function CartPage() {
   const {
@@ -201,14 +202,15 @@ export default function CartPage() {
                   placeholder="e.g. LUXURY10"
                   className="flex-1 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-2 text-xs font-mono uppercase text-[#2F4156]"
                 />
-                <button
+                <LoadingButton
                   type="button"
-                  disabled={validatingCoupon}
+                  loading={validatingCoupon}
+                  loadingText="Checking..."
                   onClick={() => handleApplyCoupon()}
-                  className="rounded-lg bg-[#567C8D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#486878]"
+                  className="h-auto rounded-lg bg-[#567C8D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#486878]"
                 >
-                  {validatingCoupon ? '...' : 'Apply'}
-                </button>
+                  Apply
+                </LoadingButton>
               </div>
 
               <div className="flex flex-wrap gap-1.5 pt-1">
@@ -216,6 +218,7 @@ export default function CartPage() {
                   <button
                     key={c}
                     type="button"
+                    disabled={validatingCoupon}
                     onClick={() => handleApplyCoupon(c)}
                     className="inline-flex items-center gap-1 rounded-md border border-[#E8E0D9] bg-[#F5F1EE] px-2 py-1 text-[11px] font-mono text-[#567C8D] hover:bg-[#C8D9E6]/50"
                   >

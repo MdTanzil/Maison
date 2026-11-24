@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -18,6 +18,7 @@ import {
   Settings,
   Printer,
   LogOut,
+  Loader2,
   Menu,
   X,
   ExternalLink,
@@ -66,6 +67,13 @@ export function AdminShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [quickSearch, setQuickSearch] = useState('');
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  // Clear the nav spinner once the new page has loaded.
+  useEffect(() => {
+    setPendingHref(null);
+  }, [pathname]);
+  const [signingOut, setSigningOut] = useState(false);
 
   const visibleNavItems = NAV_ITEMS.filter((item) => {
     if (!item.permission) return true;
@@ -74,10 +82,15 @@ export function AdminShell({
   });
 
   const handleLogout = async () => {
-    await logoutAction();
-    showToast('Signed Out', 'Ended staff session safely.', 'info');
-    router.push('/auth/login');
-    router.refresh();
+    setSigningOut(true);
+    try {
+      await logoutAction();
+      showToast('Signed Out', 'Ended staff session safely.', 'info');
+      router.push('/auth/login');
+      router.refresh();
+    } finally {
+      setSigningOut(false);
+    }
   };
 
   const handleQuickOrderSearch = (e: React.FormEvent) => {
@@ -148,7 +161,10 @@ export function AdminShell({
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setSidebarOpen(false)}
+                onClick={() => {
+                  setSidebarOpen(false);
+                  if (item.href !== pathname) setPendingHref(item.href);
+                }}
                 className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all ${
                   isActive
                     ? 'bg-[#567C8D] text-white shadow-sm'
@@ -156,7 +172,11 @@ export function AdminShell({
                 }`}
                 title={item.label}
               >
-                <Icon className="h-4 w-4 shrink-0" />
+                {pendingHref === item.href ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                ) : (
+                  <Icon className="h-4 w-4 shrink-0" />
+                )}
                 {!collapsed && <span>{item.label}</span>}
               </Link>
             );
@@ -175,10 +195,15 @@ export function AdminShell({
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium text-rose-700 hover:bg-rose-50 transition-colors"
+            disabled={signingOut}
+            className="w-full flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium text-rose-700 hover:bg-rose-50 transition-colors disabled:opacity-60"
           >
-            <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Sign Out</span>}
+            {signingOut ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+              <LogOut className="h-4 w-4 shrink-0" />
+            )}
+            {!collapsed && <span>{signingOut ? 'Signing out...' : 'Sign Out'}</span>}
           </button>
         </div>
       </aside>
@@ -230,9 +255,14 @@ export function AdminShell({
           <div className="flex items-center gap-3">
             <Link
               href="/admin/orders/print-bulk"
+              onClick={() => setPendingHref('/admin/orders/print-bulk')}
               className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2 text-xs font-medium text-[#2F4156] hover:border-[#567C8D]"
             >
-              <Printer className="h-3.5 w-3.5 text-[#567C8D]" />
+              {pendingHref === '/admin/orders/print-bulk' ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#567C8D]" />
+              ) : (
+                <Printer className="h-3.5 w-3.5 text-[#567C8D]" />
+              )}
               <span>Bulk Memo Print</span>
             </Link>
 

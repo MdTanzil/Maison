@@ -10,6 +10,15 @@ import { DeliveryQuickActions } from './delivery-quick-actions';
 import { useStore } from '@/components/storefront/store-provider';
 import { GatewayStatus } from '@/lib/services/integrations';
 import { CourierProvider } from '@prisma/client';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function ShippingAdminClient({
   shipments,
@@ -56,6 +65,19 @@ export function ShippingAdminClient({
       shipments.map((s) => [s.orderId, s.deliveryStaffId || deliveryRiders[0]?.id || ''])
     )
   );
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
 
   const handleDispatch = async (orderId: string, orderNumber: string) => {
     const provider = selectedCourier[orderId] || 'STEADFAST';
@@ -204,7 +226,17 @@ export function ShippingAdminClient({
                         </select>
                         <button
                           type="button"
-                          onClick={() => handleDispatch(s.orderId, s.orderNumber)}
+                          onClick={() => {
+                            const provider =
+                              selectedCourier[s.orderId] || 'STEADFAST';
+                            setConfirm({
+                              title: 'Dispatch Shipment',
+                              message: `Book ${s.orderNumber} for dispatch via ${provider}? A tracking number will be generated.`,
+                              confirmLabel: 'Dispatch',
+                              onConfirm: () =>
+                                handleDispatch(s.orderId, s.orderNumber),
+                            });
+                          }}
                           className="inline-flex items-center gap-1 rounded-lg bg-[#2F4156] px-2.5 py-1 text-[11px] font-semibold text-white"
                         >
                           <Send className="h-3 w-3" />
@@ -239,6 +271,17 @@ export function ShippingAdminClient({
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

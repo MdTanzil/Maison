@@ -10,6 +10,16 @@ import {
   deleteCouponAction,
 } from '@/actions/admin-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LoadingButton } from '@/components/ui/loading-button';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function CouponsAdminClient({
   coupons,
@@ -31,6 +41,21 @@ export function CouponsAdminClient({
   const router = useRouter();
   const { showToast } = useStore();
 
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [savingCoupon, setSavingCoupon] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
+
   const [code, setCode] = useState('');
   const [description, setDescription] = useState('');
   const [discountType, setDiscountType] = useState<'PERCENTAGE' | 'FIXED'>('PERCENTAGE');
@@ -42,26 +67,31 @@ export function CouponsAdminClient({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await upsertCouponAction({
-      code,
-      description,
-      discountType,
-      discountValue: Number(discountValue),
-      minOrderAmount: Number(minOrderAmount),
-      maxDiscountAmount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
-      expiryDate,
-      usageLimit: usageLimit ? Number(usageLimit) : null,
-      perCustomerLimit: 2,
-      isActive: true,
-    });
-    if (!res.ok) {
-      showToast('Validation Error', res.error, 'error');
-      return;
+    setSavingCoupon(true);
+    try {
+      const res = await upsertCouponAction({
+        code,
+        description,
+        discountType,
+        discountValue: Number(discountValue),
+        minOrderAmount: Number(minOrderAmount),
+        maxDiscountAmount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
+        expiryDate,
+        usageLimit: usageLimit ? Number(usageLimit) : null,
+        perCustomerLimit: 2,
+        isActive: true,
+      });
+      if (!res.ok) {
+        showToast('Validation Error', res.error, 'error');
+        return;
+      }
+      showToast('Coupon Saved', `Saved promotional code ${code.toUpperCase()}.`);
+      setCode('');
+      setDescription('');
+      router.refresh();
+    } finally {
+      setSavingCoupon(false);
     }
-    showToast('Coupon Saved', `Saved promotional code ${code.toUpperCase()}.`);
-    setCode('');
-    setDescription('');
-    router.refresh();
   };
 
   return (
@@ -116,10 +146,20 @@ export function CouponsAdminClient({
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={async () => {
-                      await toggleCouponStatusAction(c.id);
-                      router.refresh();
-                    }}
+                    onClick={() =>
+                      setConfirm({
+                        title: c.isActive ? 'Deactivate Coupon' : 'Activate Coupon',
+                        message: c.isActive
+                          ? `Deactivate coupon "${c.code}"? Customers will no longer be able to use it.`
+                          : `Activate coupon "${c.code}"? Customers will be able to use it at checkout.`,
+                        confirmLabel: c.isActive ? 'Deactivate' : 'Activate',
+                        destructive: c.isActive,
+                        onConfirm: async () => {
+                          await toggleCouponStatusAction(c.id);
+                          router.refresh();
+                        },
+                      })
+                    }
                     className="rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] p-2 text-[#2F4156] hover:border-[#567C8D]"
                     title="Toggle Active"
                   >
@@ -127,10 +167,18 @@ export function CouponsAdminClient({
                   </button>
                   <button
                     type="button"
-                    onClick={async () => {
-                      await deleteCouponAction(c.id);
-                      router.refresh();
-                    }}
+                    onClick={() =>
+                      setConfirm({
+                        title: 'Delete Coupon',
+                        message: `Delete coupon "${c.code}"? This cannot be undone.`,
+                        confirmLabel: 'Delete',
+                        destructive: true,
+                        onConfirm: async () => {
+                          await deleteCouponAction(c.id);
+                          router.refresh();
+                        },
+                      })
+                    }
                     className="rounded-lg border border-[#E8E0D9] bg-white p-2 text-rose-600 hover:bg-rose-50"
                     title="Delete Coupon"
                   >
@@ -257,15 +305,27 @@ export function CouponsAdminClient({
             />
           </div>
 
-          <button
+          <LoadingButton
             type="submit"
-            className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#567C8D] py-2.5 font-semibold text-white hover:bg-[#486878]"
+            loading={savingCoupon}
+            loadingText="Saving..."
+            className="h-auto w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
           >
             <Plus className="h-4 w-4" />
             <span>Save Coupon</span>
-          </button>
+          </LoadingButton>
         </form>
       </div>
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

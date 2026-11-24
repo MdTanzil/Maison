@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Save, KeyRound } from 'lucide-react';
 import { updateIntegrationCredentialsAction } from '@/actions/admin-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 export type CredentialsInitial = {
   smtpHost: string;
@@ -114,14 +115,15 @@ export function CredentialsAdminClient({
           </p>
         </div>
 
-        <button
+        <LoadingButton
           type="submit"
-          disabled={saving}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#567C8D] px-6 py-3 text-xs font-semibold text-white hover:bg-[#486878]"
+          loading={saving}
+          loadingText="Saving Credentials..."
+          className="h-auto inline-flex items-center gap-2 rounded-xl bg-[#567C8D] px-6 py-3 text-xs font-semibold text-white hover:bg-[#486878]"
         >
           <Save className="h-4 w-4" />
-          <span>{saving ? 'Saving Credentials...' : 'Save Credentials'}</span>
-        </button>
+          <span>Save Credentials</span>
+        </LoadingButton>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">

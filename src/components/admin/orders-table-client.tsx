@@ -12,7 +12,6 @@ import {
   Square,
   FileText,
   Receipt,
-  UserPlus,
   Trash2,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -23,6 +22,7 @@ import {
   deleteOrderAction,
 } from '@/actions/order-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { OrderStatus } from '@prisma/client';
 
 const ORDER_STATUSES: OrderStatus[] = [
@@ -36,6 +36,14 @@ const ORDER_STATUSES: OrderStatus[] = [
   'RETURNED',
   'REFUNDED',
 ];
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function OrdersTableClient({
   orders,
@@ -82,8 +90,19 @@ export function OrdersTableClient({
   const [dateFilter, setDateFilter] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<OrderStatus>('CONFIRMED');
-  const [processingBulk, setProcessingBulk] = useState(false);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -118,65 +137,101 @@ export function OrdersTableClient({
     }
   };
 
-  const handleBulkStatusUpdate = async () => {
+  const handleBulkStatusUpdate = () => {
     if (!selectedIds.length) {
       showToast('No Orders Selected', 'Select at least one order first.', 'error');
       return;
     }
-    setProcessingBulk(true);
-    const res = await bulkUpdateOrderStatusAction({
-      orderIds: selectedIds,
-      status: bulkStatus,
+    const count = selectedIds.length;
+    const noun = count === 1 ? 'order' : 'orders';
+    setConfirm({
+      title: 'Update Order Status',
+      message: `Move ${count} selected ${noun} to ${bulkStatus}?`,
+      confirmLabel: 'Update Status',
+      onConfirm: async () => {
+        const res = await bulkUpdateOrderStatusAction({
+          orderIds: selectedIds,
+          status: bulkStatus,
+        });
+        if (res.ok) {
+          showToast(
+            'Bulk Status Updated',
+            `Updated ${selectedIds.length} orders to ${bulkStatus}`,
+            'success'
+          );
+          setSelectedIds([]);
+          router.refresh();
+        }
+      },
     });
-    setProcessingBulk(false);
-    if (res.ok) {
-      showToast(
-        'Bulk Status Updated',
-        `Updated ${selectedIds.length} orders to ${bulkStatus}`,
-        'success'
-      );
-      setSelectedIds([]);
-      router.refresh();
-    }
   };
 
-  const handleQuickSingleStatus = async (orderId: string, nextStatus: OrderStatus) => {
-    const res = await updateOrderStatusAction({ orderId, status: nextStatus });
-    if (!res.ok) {
-      showToast('Status Error', res.error, 'error');
-      return;
-    }
-    showToast('Status Updated', `Order moved to ${nextStatus}`, 'success');
-    router.refresh();
+  const handleQuickSingleStatus = (
+    orderId: string,
+    orderNumber: string,
+    nextStatus: OrderStatus
+  ) => {
+    setConfirm({
+      title: 'Change Order Status',
+      message: `Move order ${orderNumber} to ${nextStatus}?`,
+      confirmLabel: 'Change Status',
+      onConfirm: async () => {
+        const res = await updateOrderStatusAction({ orderId, status: nextStatus });
+        if (!res.ok) {
+          showToast('Status Error', res.error, 'error');
+          return;
+        }
+        showToast('Status Updated', `Order moved to ${nextStatus}`, 'success');
+        router.refresh();
+      },
+    });
   };
 
-  const handleQuickAssign = async (orderId: string, staffId: string) => {
+  const handleQuickAssign = (
+    orderId: string,
+    orderNumber: string,
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const staffId = e.target.value;
     if (!staffId) return;
-    const res = await assignOrderToStaffAction({
-      orderId,
-      staffId,
-      roleType: 'MODERATOR',
+    const staffName = staffList.find((st) => st.id === staffId)?.name ?? 'this staff member';
+    // Reset the picker right away so a cancelled confirmation leaves no
+    // stale selection behind.
+    e.target.value = '';
+    setConfirm({
+      title: 'Assign Staff',
+      message: `Assign order ${orderNumber} to ${staffName} as Moderator?`,
+      confirmLabel: 'Assign',
+      onConfirm: async () => {
+        const res = await assignOrderToStaffAction({
+          orderId,
+          staffId,
+          roleType: 'MODERATOR',
+        });
+        if (res.ok) {
+          showToast('Staff Assigned', 'Assigned order to staff member.', 'success');
+          router.refresh();
+        }
+      },
     });
-    if (res.ok) {
-      showToast('Staff Assigned', 'Assigned order to staff member.', 'success');
-      router.refresh();
-    }
   };
 
-  const handleDeleteOrder = async (orderId: string, orderNumber: string) => {
-    // Two-click confirmation: first click arms, second click deletes.
-    if (confirmDeleteId !== orderId) {
-      setConfirmDeleteId(orderId);
-      return;
-    }
-    setConfirmDeleteId(null);
-    const res = await deleteOrderAction(orderId);
-    if (!res.ok) {
-      showToast('Delete Failed', res.error, 'error');
-      return;
-    }
-    showToast('Order Deleted', `Cancelled order ${orderNumber} was permanently deleted.`, 'success');
-    router.refresh();
+  const handleDeleteOrder = (orderId: string, orderNumber: string) => {
+    setConfirm({
+      title: 'Delete Cancelled Order',
+      message: `Permanently delete cancelled order ${orderNumber}? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        const res = await deleteOrderAction(orderId);
+        if (!res.ok) {
+          showToast('Delete Failed', res.error, 'error');
+          return;
+        }
+        showToast('Order Deleted', `Cancelled order ${orderNumber} was permanently deleted.`, 'success');
+        router.refresh();
+      },
+    });
   };
 
   return (
@@ -302,11 +357,10 @@ export function OrdersTableClient({
               </select>
               <button
                 type="button"
-                disabled={processingBulk}
                 onClick={handleBulkStatusUpdate}
                 className="rounded-lg bg-[#567C8D] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#486878]"
               >
-                {processingBulk ? 'Updating...' : 'Apply Bulk Status'}
+                Apply Bulk Status
               </button>
               <Link
                 href={`/admin/orders/print-bulk?ids=${selectedIds.join(',')}&format=80mm`}
@@ -411,7 +465,11 @@ export function OrdersTableClient({
                         <select
                           value={o.status}
                           onChange={(e) =>
-                            handleQuickSingleStatus(o.id, e.target.value as OrderStatus)
+                            handleQuickSingleStatus(
+                              o.id,
+                              o.orderNumber,
+                              e.target.value as OrderStatus
+                            )
                           }
                           className="rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-2.5 py-1.5 text-xs font-semibold text-[#2F4156] focus:border-[#567C8D]"
                         >
@@ -441,7 +499,7 @@ export function OrdersTableClient({
                         {canAssign && (
                           <select
                             defaultValue=""
-                            onChange={(e) => handleQuickAssign(o.id, e.target.value)}
+                            onChange={(e) => handleQuickAssign(o.id, o.orderNumber, e)}
                             className="rounded border border-[#E8E0D9] bg-[#F5F1EE] px-2 py-1 text-[10px] text-[#567C8D]"
                           >
                             <option value="">+ Assign Staff</option>
@@ -485,21 +543,11 @@ export function OrdersTableClient({
                           <button
                             type="button"
                             onClick={() => handleDeleteOrder(o.id, o.orderNumber)}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold ${
-                              confirmDeleteId === o.id
-                                ? 'bg-rose-600 text-white'
-                                : 'border border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100'
-                            }`}
-                            title={
-                              confirmDeleteId === o.id
-                                ? 'Click again to permanently delete this cancelled order'
-                                : 'Delete this cancelled order'
-                            }
+                            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-800 hover:bg-rose-100"
+                            title="Delete this cancelled order"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                            <span>
-                              {confirmDeleteId === o.id ? 'Confirm delete?' : 'Delete'}
-                            </span>
+                            <span>Delete</span>
                           </button>
                         )}
                       </div>
@@ -511,6 +559,17 @@ export function OrdersTableClient({
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

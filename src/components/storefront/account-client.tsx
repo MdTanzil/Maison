@@ -21,6 +21,16 @@ import {
   deleteCustomerAddressAction,
 } from '@/actions/auth-actions';
 import { useStore } from './store-provider';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LoadingButton } from '@/components/ui/loading-button';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function CustomerAccountClient({
   user,
@@ -91,6 +101,19 @@ export function CustomerAccountClient({
   const [addrCity, setAddrCity] = useState('Dhaka');
   const [addrZone, setAddrZone] = useState('INSIDE_CITY');
   const [savingAddr, setSavingAddr] = useState(false);
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,7 +383,15 @@ export function CustomerAccountClient({
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleDeleteAddress(addr.id)}
+                  onClick={() =>
+                    setConfirm({
+                      title: 'Remove Address',
+                      message: `Remove the "${addr.label}" address from your address book?`,
+                      confirmLabel: 'Remove',
+                      destructive: true,
+                      onConfirm: () => handleDeleteAddress(addr.id),
+                    })
+                  }
                   className="text-[#8A949E] hover:text-rose-600 p-1.5"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -432,14 +463,15 @@ export function CustomerAccountClient({
                 <option value="SUB_AREA">Dhaka Sub-Area</option>
                 <option value="OUTSIDE_CITY">Outside Dhaka</option>
               </select>
-              <button
+              <LoadingButton
                 type="submit"
-                disabled={savingAddr}
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
+                loading={savingAddr}
+                loadingText="Saving..."
+                className="h-auto w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
               >
                 <Plus className="h-4 w-4" />
-                <span>{savingAddr ? 'Saving...' : 'Save Address'}</span>
-              </button>
+                <span>Save Address</span>
+              </LoadingButton>
             </form>
           </div>
         </div>
@@ -494,16 +526,28 @@ export function CustomerAccountClient({
                 className="w-full rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2 text-sm"
               />
             </div>
-            <button
+            <LoadingButton
               type="submit"
-              disabled={savingProfile}
-              className="rounded-xl bg-[#567C8D] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
+              loading={savingProfile}
+              loadingText="Saving..."
+              className="h-auto rounded-xl bg-[#567C8D] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
             >
-              {savingProfile ? 'Saving...' : 'Save Changes'}
-            </button>
+              Save Changes
+            </LoadingButton>
           </form>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   CheckSquare,
   Square,
   AlertTriangle,
+  Loader2,
   X,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
@@ -21,6 +22,8 @@ import {
   importProductsCsvAction,
 } from '@/actions/catalog-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 interface AdminProductRow {
   id: string;
@@ -49,6 +52,14 @@ interface AdminProductRow {
   soldCount: number;
 }
 
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
+
 export function ProductsAdminClient({
   products,
   categories,
@@ -73,6 +84,20 @@ export function ProductsAdminClient({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [csvImporting, setCsvImporting] = useState(false);
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
 
   // Product Form State
   const [editId, setEditId] = useState<string | undefined>(undefined);
@@ -197,49 +222,100 @@ export function ProductsAdminClient({
     router.refresh();
   };
 
-  const handleBulkAction = async (
+  const handleBulkAction = (
     operation: 'PUBLISH' | 'ARCHIVE' | 'DELETE' | 'DISCOUNT_10' | 'RESTOCK_10'
   ) => {
     if (!selectedIds.length) return;
-    const res = await bulkProductOperationAction({
-      productIds: selectedIds,
-      operation,
+    const count = selectedIds.length;
+    const noun = count === 1 ? 'product' : 'products';
+    const meta: Record<
+      typeof operation,
+      { title: string; message: string; confirmLabel: string; destructive?: boolean }
+    > = {
+      PUBLISH: {
+        title: 'Publish Products',
+        message: `Publish ${count} selected ${noun} to the storefront?`,
+        confirmLabel: 'Publish',
+      },
+      ARCHIVE: {
+        title: 'Archive Products',
+        message: `Archive ${count} selected ${noun}? Archived products are hidden from the storefront.`,
+        confirmLabel: 'Archive',
+      },
+      DELETE: {
+        title: 'Delete Products',
+        message: `Permanently delete ${count} selected ${noun}? This cannot be undone.`,
+        confirmLabel: 'Delete',
+        destructive: true,
+      },
+      DISCOUNT_10: {
+        title: 'Apply 10% Sale Price',
+        message: `Apply a 10% sale price to ${count} selected ${noun}?`,
+        confirmLabel: 'Apply Discount',
+      },
+      RESTOCK_10: {
+        title: 'Replenish Stock',
+        message: `Add 10 units of stock to each of the ${count} selected ${noun}?`,
+        confirmLabel: 'Replenish Stock',
+      },
+    };
+    const m = meta[operation];
+    setConfirm({
+      title: m.title,
+      message: m.message,
+      confirmLabel: m.confirmLabel,
+      destructive: m.destructive,
+      onConfirm: async () => {
+        const res = await bulkProductOperationAction({
+          productIds: selectedIds,
+          operation,
+        });
+        if (res.ok) {
+          showToast('Bulk Action Complete', `Applied ${operation} to ${selectedIds.length} products.`);
+          setSelectedIds([]);
+          router.refresh();
+        } else {
+          showToast('Bulk Error', res.error, 'error');
+        }
+      },
     });
-    if (res.ok) {
-      showToast('Bulk Action Complete', `Applied ${operation} to ${selectedIds.length} products.`);
-      setSelectedIds([]);
-      router.refresh();
-    } else {
-      showToast('Bulk Error', res.error, 'error');
-    }
   };
 
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setCsvImporting(true);
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        const rows = (results.data as Array<Record<string, string>>).map((r) => ({
-          title: r.Title || r.title || '',
-          sku: r.SKU || r.sku || '',
-          regularPrice: Number(r.RegularPrice || r.regularPrice || 3500),
-          salePrice: Number(r.SalePrice || r.salePrice || 3200),
-          stockQuantity: Number(r.StockQuantity || r.stockQuantity || 15),
-        }));
-        const res = await importProductsCsvAction(rows);
-        if (res.ok) {
-          showToast(
-            'CSV Import Complete',
-            `Imported/updated ${res.importedCount} products.`,
-            'success'
-          );
-          router.refresh();
-        } else {
-          showToast('Import Failed', res.error, 'error');
+        try {
+          const rows = (results.data as Array<Record<string, string>>).map((r) => ({
+            title: r.Title || r.title || '',
+            sku: r.SKU || r.sku || '',
+            regularPrice: Number(r.RegularPrice || r.regularPrice || 3500),
+            salePrice: Number(r.SalePrice || r.salePrice || 3200),
+            stockQuantity: Number(r.StockQuantity || r.stockQuantity || 15),
+          }));
+          const res = await importProductsCsvAction(rows);
+          if (res.ok) {
+            showToast(
+              'CSV Import Complete',
+              `Imported/updated ${res.importedCount} products.`,
+              'success'
+            );
+            router.refresh();
+          } else {
+            showToast('Import Failed', res.error, 'error');
+          }
+        } finally {
+          setCsvImporting(false);
         }
+      },
+      error: (err) => {
+        setCsvImporting(false);
+        showToast('Import Failed', err.message, 'error');
       },
     });
   };
@@ -270,9 +346,17 @@ export function ProductsAdminClient({
           </a>
 
           {canCreate && (
-            <label className="inline-flex items-center gap-1.5 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-4 py-2.5 text-xs font-semibold text-[#2F4156] hover:border-[#567C8D] cursor-pointer">
-              <Upload className="h-4 w-4 text-[#567C8D]" />
-              <span>Import CSV</span>
+            <label
+              className={`inline-flex items-center gap-1.5 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-4 py-2.5 text-xs font-semibold text-[#2F4156] hover:border-[#567C8D] ${
+                csvImporting ? 'pointer-events-none opacity-50' : 'cursor-pointer'
+              }`}
+            >
+              {csvImporting ? (
+                <Loader2 className="h-4 w-4 animate-spin text-[#567C8D]" />
+              ) : (
+                <Upload className="h-4 w-4 text-[#567C8D]" />
+              )}
+              <span>{csvImporting ? 'Importing...' : 'Import CSV'}</span>
               <input
                 type="file"
                 accept=".csv"
@@ -750,18 +834,30 @@ export function ProductsAdminClient({
                 >
                   Cancel
                 </button>
-                <button
+                <LoadingButton
                   type="submit"
-                  disabled={saving}
-                  className="rounded-xl bg-[#567C8D] px-6 py-2.5 font-semibold text-white hover:bg-[#486878]"
+                  loading={saving}
+                  loadingText="Saving..."
+                  className="h-auto rounded-xl bg-[#567C8D] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
                 >
-                  {saving ? 'Saving...' : 'Save Product'}
-                </button>
+                  Save Product
+                </LoadingButton>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

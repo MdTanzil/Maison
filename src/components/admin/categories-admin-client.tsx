@@ -9,6 +9,16 @@ import {
   upsertBrandAction,
 } from '@/actions/catalog-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LoadingButton } from '@/components/ui/loading-button';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function CategoriesAdminClient({
   categories,
@@ -36,6 +46,22 @@ export function CategoriesAdminClient({
   const router = useRouter();
   const { showToast } = useStore();
 
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [savingCategory, setSavingCategory] = useState(false);
+  const [savingBrand, setSavingBrand] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
+
   const [catName, setCatName] = useState('');
   const [catDesc, setCatDesc] = useState('');
   const [catParentId, setCatParentId] = useState('');
@@ -45,16 +71,21 @@ export function CategoriesAdminClient({
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await upsertCategoryAction({
-      name: catName,
-      description: catDesc,
-      parentId: catParentId || null,
-    });
-    if (res.ok) {
-      showToast('Category Saved', `Added "${catName}" to catalog hierarchy.`);
-      setCatName('');
-      setCatDesc('');
-      router.refresh();
+    setSavingCategory(true);
+    try {
+      const res = await upsertCategoryAction({
+        name: catName,
+        description: catDesc,
+        parentId: catParentId || null,
+      });
+      if (res.ok) {
+        showToast('Category Saved', `Added "${catName}" to catalog hierarchy.`);
+        setCatName('');
+        setCatDesc('');
+        router.refresh();
+      }
+    } finally {
+      setSavingCategory(false);
     }
   };
 
@@ -70,15 +101,20 @@ export function CategoriesAdminClient({
 
   const handleCreateBrand = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await upsertBrandAction({
-      name: brandName,
-      description: brandDesc,
-    });
-    if (res.ok) {
-      showToast('Brand Saved', `Added "${brandName}" to brands.`);
-      setBrandName('');
-      setBrandDesc('');
-      router.refresh();
+    setSavingBrand(true);
+    try {
+      const res = await upsertBrandAction({
+        name: brandName,
+        description: brandDesc,
+      });
+      if (res.ok) {
+        showToast('Brand Saved', `Added "${brandName}" to brands.`);
+        setBrandName('');
+        setBrandDesc('');
+        router.refresh();
+      }
+    } finally {
+      setSavingBrand(false);
     }
   };
 
@@ -122,7 +158,15 @@ export function CategoriesAdminClient({
                   </div>
                   <button
                     type="button"
-                    onClick={() => handleDeleteCategory(c.id)}
+                    onClick={() =>
+                      setConfirm({
+                        title: 'Delete Category',
+                        message: `Delete "${c.name}" from the catalog? This cannot be undone.`,
+                        confirmLabel: 'Delete',
+                        destructive: true,
+                        onConfirm: () => handleDeleteCategory(c.id),
+                      })
+                    }
                     className="text-[#8A949E] hover:text-rose-600 p-1.5"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -202,13 +246,15 @@ export function CategoriesAdminClient({
                 className="w-full rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2"
               />
             </div>
-            <button
+            <LoadingButton
               type="submit"
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#567C8D] py-2.5 font-semibold text-white hover:bg-[#486878]"
+              loading={savingCategory}
+              loadingText="Saving..."
+              className="h-auto w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
             >
               <Plus className="h-4 w-4" />
               <span>Save Category</span>
-            </button>
+            </LoadingButton>
           </form>
 
           <form
@@ -233,16 +279,28 @@ export function CategoriesAdminClient({
               placeholder="Brand heritage & notes"
               className="w-full rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2"
             />
-            <button
+            <LoadingButton
               type="submit"
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#2F4156] py-2.5 font-semibold text-white hover:opacity-90"
+              loading={savingBrand}
+              loadingText="Saving..."
+              className="h-auto w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#2F4156] py-2.5 text-xs font-semibold text-white hover:opacity-90"
             >
               <Plus className="h-4 w-4" />
               <span>Save Brand</span>
-            </button>
+            </LoadingButton>
           </form>
         </div>
       </div>
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

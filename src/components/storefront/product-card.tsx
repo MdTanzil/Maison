@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Heart, ShoppingBag, Star, Zap } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Zap, Loader2 } from 'lucide-react';
 import { useStore } from './store-provider';
 import { formatCurrency } from '@/lib/utils';
 
@@ -29,6 +29,9 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
   const router = useRouter();
   const { addToCart, toggleWishlist, isInWishlist } = useStore();
   const wished = isInWishlist(product.id);
+  const [adding, setAdding] = useState(false);
+  const [buying, setBuying] = useState(false);
+  const [wishing, setWishing] = useState(false);
   const effectivePrice = product.salePrice ?? product.regularPrice;
   const hasDiscount =
     product.salePrice !== null &&
@@ -58,6 +61,16 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
       quantity: 1,
       maxStock: product.stockQuantity,
     });
+    // Brief visible feedback for the instant local add-to-bag action.
+    setAdding(true);
+    setTimeout(() => setAdding(false), 600);
+  };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setWishing(true);
+    toggleWishlist(product.id, product.title);
+    setTimeout(() => setWishing(false), 500);
   };
 
   const handleBuyNow = (e: React.MouseEvent) => {
@@ -76,7 +89,10 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
       quantity: 1,
       maxStock: product.stockQuantity,
     });
+    setBuying(true);
     router.push('/checkout');
+    // Safety: clear the spinner if navigation does not happen.
+    setTimeout(() => setBuying(false), 5000);
   };
 
   return (
@@ -113,7 +129,8 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
         {/* Wishlist Button */}
         <button
           type="button"
-          onClick={() => toggleWishlist(product.id, product.title)}
+          onClick={handleWishlist}
+          disabled={wishing}
           aria-label="Toggle Wishlist"
           className={`absolute top-3 right-3 rounded-full p-2 transition-colors border ${
             wished
@@ -121,7 +138,11 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
               : 'bg-white/90 text-[#2F4156] border-[#E8E0D9] hover:bg-white'
           }`}
         >
-          <Heart className={`h-4 w-4 ${wished ? 'fill-current' : ''}`} />
+          {wishing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Heart className={`h-4 w-4 ${wished ? 'fill-current' : ''}`} />
+          )}
         </button>
       </div>
 
@@ -159,21 +180,29 @@ export function ProductCard({ product }: { product: ProductCardProps }) {
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              disabled={product.stockQuantity <= 0}
+              disabled={product.stockQuantity <= 0 || adding}
               onClick={handleAddToCart}
               className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#567C8D] px-3 py-2 text-xs font-medium text-white hover:bg-[#486878] disabled:opacity-50 transition-colors"
             >
-              <ShoppingBag className="h-3.5 w-3.5" />
-              <span>Add to Bag</span>
+              {adding ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <ShoppingBag className="h-3.5 w-3.5" />
+              )}
+              <span>{adding ? 'Adding...' : 'Add to Bag'}</span>
             </button>
             <button
               type="button"
-              disabled={product.stockQuantity <= 0}
+              disabled={product.stockQuantity <= 0 || buying}
               onClick={handleBuyNow}
               className="inline-flex items-center justify-center gap-1 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-2 text-xs font-medium text-[#2F4156] hover:bg-[#E8E0D9] disabled:opacity-50 transition-colors"
             >
-              <Zap className="h-3.5 w-3.5 text-[#567C8D]" />
-              <span>Buy Now</span>
+              {buying ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#567C8D]" />
+              ) : (
+                <Zap className="h-3.5 w-3.5 text-[#567C8D]" />
+              )}
+              <span>{buying ? 'Going to Checkout...' : 'Buy Now'}</span>
             </button>
           </div>
         </div>

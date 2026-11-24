@@ -18,6 +18,16 @@ import {
   upsertRolePermissionsAction,
 } from '@/actions/admin-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LoadingButton } from '@/components/ui/loading-button';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function StaffAdminClient({
   staff,
@@ -66,6 +76,21 @@ export function StaffAdminClient({
   const router = useRouter();
   const { showToast } = useStore();
   const [tab, setTab] = useState<'staff' | 'roles' | 'logs'>('staff');
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [savingStaff, setSavingStaff] = useState(false);
+  const [savingRole, setSavingRole] = useState(false);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
 
   // New Staff Form State
   const [name, setName] = useState('');
@@ -94,26 +119,31 @@ export function StaffAdminClient({
 
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await upsertStaffMemberAction({
-      name,
-      email,
-      phone,
-      password,
-      roleId,
-      employeeCode,
-      department,
-      designation,
-      customPermissions: [],
-    });
-    if (!res.ok) {
-      showToast('Error', res.error, 'error');
-      return;
+    setSavingStaff(true);
+    try {
+      const res = await upsertStaffMemberAction({
+        name,
+        email,
+        phone,
+        password,
+        roleId,
+        employeeCode,
+        department,
+        designation,
+        customPermissions: [],
+      });
+      if (!res.ok) {
+        showToast('Error', res.error, 'error');
+        return;
+      }
+      showToast('Staff Created', `Created staff account for ${name}.`, 'success');
+      setName('');
+      setEmail('');
+      setPhone('');
+      router.refresh();
+    } finally {
+      setSavingStaff(false);
     }
-    showToast('Staff Created', `Created staff account for ${name}.`, 'success');
-    setName('');
-    setEmail('');
-    setPhone('');
-    router.refresh();
   };
 
   const handleToggleActive = async (id: string) => {
@@ -145,18 +175,23 @@ export function StaffAdminClient({
 
   const handleSaveRole = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await upsertRolePermissionsAction({
-      roleId: selectedRoleId || undefined,
-      name: roleName,
-      description: roleDesc,
-      permissionCodes: selectedPermCodes,
-    });
-    if (res.ok) {
-      showToast('Role Saved', `Configured role "${roleName}" with granular permissions.`);
-      setRoleName('');
-      setRoleDesc('');
-      setSelectedRoleId('');
-      router.refresh();
+    setSavingRole(true);
+    try {
+      const res = await upsertRolePermissionsAction({
+        roleId: selectedRoleId || undefined,
+        name: roleName,
+        description: roleDesc,
+        permissionCodes: selectedPermCodes,
+      });
+      if (res.ok) {
+        showToast('Role Saved', `Configured role "${roleName}" with granular permissions.`);
+        setRoleName('');
+        setRoleDesc('');
+        setSelectedRoleId('');
+        router.refresh();
+      }
+    } finally {
+      setSavingRole(false);
     }
   };
 
@@ -265,7 +300,14 @@ export function StaffAdminClient({
                         <div className="inline-flex items-center gap-1.5">
                           <button
                             type="button"
-                            onClick={() => handleResetPassword(s.id, s.name)}
+                            onClick={() =>
+                              setConfirm({
+                                title: 'Reset Password',
+                                message: `Reset the password for ${s.name} to the default (Staff@123)? They should change it after signing in.`,
+                                confirmLabel: 'Reset Password',
+                                onConfirm: () => handleResetPassword(s.id, s.name),
+                              })
+                            }
                             className="rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-2.5 py-1 text-[11px] font-medium text-[#2F4156] hover:border-[#567C8D]"
                             title="Reset Password"
                           >
@@ -274,7 +316,17 @@ export function StaffAdminClient({
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleToggleActive(s.id)}
+                            onClick={() =>
+                              setConfirm({
+                                title: s.isActive ? 'Deactivate Staff' : 'Reactivate Staff',
+                                message: s.isActive
+                                  ? `Deactivate ${s.name}? They will no longer be able to sign in to the admin panel.`
+                                  : `Reactivate ${s.name}? They will be able to sign in to the admin panel again.`,
+                                confirmLabel: s.isActive ? 'Deactivate' : 'Reactivate',
+                                destructive: s.isActive,
+                                onConfirm: () => handleToggleActive(s.id),
+                              })
+                            }
                             className="rounded-lg border border-[#E8E0D9] bg-white px-2.5 py-1 text-[11px] font-medium text-[#2F4156] hover:border-[#567C8D]"
                           >
                             <Power className="h-3.5 w-3.5 inline" />
@@ -367,13 +419,15 @@ export function StaffAdminClient({
                 className="w-full rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-2"
               />
             </div>
-            <button
+            <LoadingButton
               type="submit"
-              className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#567C8D] py-2.5 font-semibold text-white hover:bg-[#486878]"
+              loading={savingStaff}
+              loadingText="Creating..."
+              className="h-auto w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
             >
               <UserPlus className="h-4 w-4" />
               <span>Create Staff Account</span>
-            </button>
+            </LoadingButton>
           </form>
         </div>
       )}
@@ -471,12 +525,14 @@ export function StaffAdminClient({
                 </div>
               </div>
 
-              <button
+              <LoadingButton
                 type="submit"
-                className="w-full rounded-xl bg-[#567C8D] py-2.5 font-semibold text-white hover:bg-[#486878]"
+                loading={savingRole}
+                loadingText="Saving..."
+                className="h-auto w-full rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
               >
                 Save Role &amp; Permission Matrix
-              </button>
+              </LoadingButton>
             </form>
           )}
         </div>
@@ -527,6 +583,16 @@ export function StaffAdminClient({
           </div>
         </div>
       )}
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

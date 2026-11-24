@@ -9,6 +9,16 @@ import {
   updateCustomerNotesAction,
 } from '@/actions/admin-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { LoadingButton } from '@/components/ui/loading-button';
+
+type PendingConfirm = {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  destructive?: boolean;
+  onConfirm: () => Promise<void>;
+};
 
 export function CustomersAdminClient({
   customers,
@@ -31,6 +41,21 @@ export function CustomersAdminClient({
 }) {
   const router = useRouter();
   const { showToast } = useStore();
+  const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [savingNoteId, setSavingNoteId] = useState<string | null>(null);
+
+  const runConfirmed = async () => {
+    if (!confirm) return;
+    setConfirmLoading(true);
+    try {
+      await confirm.onConfirm();
+    } finally {
+      setConfirmLoading(false);
+      setConfirm(null);
+    }
+  };
+
   const [search, setSearch] = useState('');
   const [notesMap, setNotesMap] = useState<Record<string, string>>(
     Object.fromEntries(customers.map((c) => [c.id, c.internalNotes]))
@@ -59,10 +84,15 @@ export function CustomersAdminClient({
   };
 
   const handleSaveNote = async (id: string) => {
-    const res = await updateCustomerNotesAction(id, notesMap[id] || '');
-    if (res.ok) {
-      showToast('CRM Note Saved', 'Updated internal customer note.', 'success');
-      router.refresh();
+    setSavingNoteId(id);
+    try {
+      const res = await updateCustomerNotesAction(id, notesMap[id] || '');
+      if (res.ok) {
+        showToast('CRM Note Saved', 'Updated internal customer note.', 'success');
+        router.refresh();
+      }
+    } finally {
+      setSavingNoteId(null);
     }
   };
 
@@ -151,14 +181,15 @@ export function CustomersAdminClient({
                         className="rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-2.5 py-1 text-xs w-44"
                       />
                       {canManage && (
-                        <button
+                        <LoadingButton
                           type="button"
                           onClick={() => handleSaveNote(c.id)}
-                          className="rounded-lg bg-[#567C8D] p-1.5 text-white hover:bg-[#486878]"
+                          loading={savingNoteId === c.id}
+                          className="h-auto rounded-lg bg-[#567C8D] p-1.5 text-white hover:bg-[#486878]"
                           title="Save CRM Note"
                         >
                           <Save className="h-3.5 w-3.5" />
-                        </button>
+                        </LoadingButton>
                       )}
                     </div>
                   </td>
@@ -177,7 +208,17 @@ export function CustomersAdminClient({
                     <td className="py-3.5 px-4 text-right">
                       <button
                         type="button"
-                        onClick={() => handleToggleBlock(c.id)}
+                        onClick={() =>
+                          setConfirm({
+                            title: c.isBlocked ? 'Unblock Customer' : 'Block Customer',
+                            message: c.isBlocked
+                              ? `Unblock ${c.name}? They will regain access to their account and can place orders again.`
+                              : `Block ${c.name}? They will no longer be able to sign in or place orders.`,
+                            confirmLabel: c.isBlocked ? 'Unblock' : 'Block',
+                            destructive: !c.isBlocked,
+                            onConfirm: () => handleToggleBlock(c.id),
+                          })
+                        }
                         className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold ${
                           c.isBlocked
                             ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
@@ -204,6 +245,16 @@ export function CustomersAdminClient({
           </table>
         </div>
       </div>
+      <ConfirmDialog
+        open={confirm !== null}
+        title={confirm?.title ?? ''}
+        message={confirm?.message ?? ''}
+        confirmLabel={confirm?.confirmLabel}
+        destructive={confirm?.destructive}
+        loading={confirmLoading}
+        onConfirm={runConfirmed}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

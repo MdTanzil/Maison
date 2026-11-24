@@ -15,6 +15,7 @@ import {
 import { useStore } from '@/components/storefront/store-provider';
 import { formatCurrency } from '@/lib/utils';
 import { placeOrderAction, validateCouponServerAction, getCheckoutProfileAction } from '@/actions/order-actions';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 export default function CheckoutPage() {
   const {
@@ -44,6 +45,7 @@ export default function CheckoutPage() {
   const [customerNotes, setCustomerNotes] = useState('');
   const [couponInput, setCouponInput] = useState(appliedCoupon?.code || '');
   const [submitting, setSubmitting] = useState(false);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   const [confirmedOrder, setConfirmedOrder] = useState<{
     orderId: string;
@@ -85,11 +87,13 @@ export default function CheckoutPage() {
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;
+    setValidatingCoupon(true);
     const res = await validateCouponServerAction({
       code: couponInput,
       subtotal,
       productIds: cart.map((i) => i.productId),
     });
+    setValidatingCoupon(false);
     if (!res.ok || !res.coupon) {
       showToast('Invalid Coupon', res.error, 'error');
       return;
@@ -501,13 +505,17 @@ export default function CheckoutPage() {
                 placeholder="Promo code (e.g. LUXURY10)"
                 className="flex-1 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-2 text-xs font-mono uppercase"
               />
-              <button
+              <LoadingButton
                 type="button"
+                variant="secondary"
+                size="sm"
+                loading={validatingCoupon}
+                loadingText="Checking..."
                 onClick={handleApplyCoupon}
-                className="rounded-lg bg-[#C8D9E6] px-3.5 py-2 text-xs font-semibold text-[#2F4156] hover:bg-[#b5cadb]"
+                className="h-auto rounded-lg px-3.5 py-2 text-xs"
               >
                 Apply
-              </button>
+              </LoadingButton>
             </div>
 
             <div className="space-y-2 border-t border-[#E8E0D9] pt-4 text-sm">
@@ -533,14 +541,16 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={submitting || cart.length === 0}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#567C8D] py-3.5 text-sm font-semibold text-white hover:bg-[#486878] disabled:opacity-50 transition-colors shadow-sm"
+              disabled={cart.length === 0}
+              loading={submitting}
+              loadingText="Processing Order..."
+              className="h-auto w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#567C8D] py-3.5 text-sm font-semibold text-white hover:bg-[#486878] shadow-sm"
             >
-              <span>{submitting ? 'Processing Order...' : 'Confirm & Place Order'}</span>
+              <span>Confirm &amp; Place Order</span>
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </LoadingButton>
 
             <div className="flex items-center justify-center gap-2 text-xs text-[#52606D]">
               <ShieldCheck className="h-4 w-4 text-[#567C8D]" />
