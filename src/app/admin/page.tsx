@@ -159,7 +159,7 @@ export default async function AdminDashboardPage({
       {/* Top Welcome & Date Range Filter Bar */}
       <div className="rounded-2xl border border-[#E8E0D9] bg-white p-6 shadow-luxury flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-[#C8D9E6] px-3 py-0.5 text-xs font-semibold text-[#2F4156]">
               {user.roleNames.join(' • ')} Dashboard
             </span>
@@ -314,9 +314,9 @@ export default async function AdminDashboardPage({
         ].map((st) => (
           <div
             key={st.label}
-            className={`rounded-xl border px-4 py-3 flex items-center justify-between ${st.color}`}
+            className={`rounded-xl border px-4 py-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 ${st.color}`}
           >
-            <span className="text-xs font-semibold">{st.label}</span>
+            <span className="text-xs font-semibold min-w-0">{st.label}</span>
             <span className="text-base font-bold">{st.count}</span>
           </div>
         ))}
@@ -353,7 +353,7 @@ export default async function AdminDashboardPage({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-[#E8E0D9] bg-[#F5F1EE] text-[#2F4156]">
-                <th className="py-3 px-4 font-semibold">Order / Tracking</th>
+                <th className="py-3 px-4 font-semibold whitespace-nowrap">Order / Tracking</th>
                 <th className="py-3 px-4 font-semibold">Recipient &amp; Address</th>
                 <th className="py-3 px-4 font-semibold">Courier / Rider</th>
                 <th className="py-3 px-4 font-semibold">COD Due</th>
@@ -364,7 +364,7 @@ export default async function AdminDashboardPage({
             <tbody className="divide-y divide-[#E8E0D9]">
               {myShipments.slice(0, 5).map((sh) => (
                 <tr key={sh.id} className="hover:bg-[#F5F1EE]/50">
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4 whitespace-nowrap">
                     <Link
                       href={`/admin/orders/${sh.orderId}`}
                       className="font-mono font-bold text-[#567C8D] hover:underline"
@@ -389,10 +389,10 @@ export default async function AdminDashboardPage({
                       {sh.deliveryStaff?.name || 'Unassigned'}
                     </p>
                   </td>
-                  <td className="py-3 px-4 font-semibold text-[#2F4156]">
+                  <td className="py-3 px-4 font-semibold text-[#2F4156] whitespace-nowrap">
                     {formatCurrency(Number(sh.codAmount))}
                   </td>
-                  <td className="py-3 px-4 font-semibold text-emerald-700">
+                  <td className="py-3 px-4 font-semibold text-emerald-700 whitespace-nowrap">
                     {formatCurrency(Number(sh.collectedCash))}
                   </td>
                   <td className="py-3 px-4">
@@ -440,7 +440,7 @@ export default async function AdminDashboardPage({
               <tbody className="divide-y divide-[#E8E0D9]">
                 {orders.slice(0, 6).map((o) => (
                   <tr key={o.id} className="hover:bg-[#F5F1EE]/50">
-                    <td className="py-3 px-3 font-mono font-bold text-[#567C8D]">
+                    <td className="py-3 px-3 font-mono font-bold text-[#567C8D] whitespace-nowrap">
                       <Link href={`/admin/orders/${o.id}`} className="hover:underline">
                         {o.orderNumber}
                       </Link>
@@ -449,7 +449,7 @@ export default async function AdminDashboardPage({
                       <p className="font-semibold text-[#2F4156]">{o.customerName}</p>
                       <p className="text-[11px] text-[#52606D]">{o.customerPhone}</p>
                     </td>
-                    <td className="py-3 px-3 font-bold text-[#2F4156]">
+                    <td className="py-3 px-3 font-bold text-[#2F4156] whitespace-nowrap">
                       {formatCurrency(Number(o.grandTotal))}
                     </td>
                     <td className="py-3 px-3">
@@ -501,15 +501,15 @@ export default async function AdminDashboardPage({
                 {lowStockProducts.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/60 px-3.5 py-2.5 text-xs"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-3.5 py-2.5 text-xs"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-semibold text-[#2F4156]">{p.title}</p>
                       <p className="text-[11px] text-[#52606D]">
                         SKU: {p.sku} • Threshold: {p.lowStockThreshold}
                       </p>
                     </div>
-                    <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 font-bold text-amber-950">
+                    <span className="rounded-full bg-amber-200/80 px-2.5 py-0.5 font-bold text-amber-950 shrink-0 whitespace-nowrap">
                       {p.stockQuantity} left
                     </span>
                   </div>
@@ -543,7 +543,7 @@ export default async function AdminDashboardPage({
                   key={log.id}
                   className="rounded-xl border border-[#E8E0D9] bg-[#F5F1EE]/60 p-3 text-xs"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
                     <span className="font-semibold text-[#2F4156]">
                       {log.staffName}{' '}
                       <span className="text-[10px] text-[#567C8D]">({log.roleName})</span>
