@@ -241,16 +241,16 @@ export function OrderDetailClient({
     <div className="space-y-6">
       {/* Top Bar */}
       <div className="rounded-2xl border border-[#E8E0D9] bg-white p-6 shadow-luxury flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/admin/orders"
-            className="rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] p-2.5 text-[#2F4156] hover:border-[#567C8D]"
+            className="rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] p-2.5 text-[#2F4156] hover:border-[#567C8D] shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-serif text-2xl font-bold text-[#2F4156]">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-serif text-xl sm:text-2xl font-bold text-[#2F4156] whitespace-nowrap">
                 Order {order.orderNumber}
               </h1>
               <span className="rounded-full bg-[#567C8D] px-3 py-0.5 text-xs font-semibold text-white">
@@ -299,15 +299,15 @@ export function OrderDetailClient({
                   key={it.id}
                   className="py-3 flex items-center justify-between gap-4 text-xs"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     {it.imageUrl && (
                       <img
                         src={it.imageUrl}
                         alt={it.productName}
-                        className="h-12 w-10 rounded-lg object-cover border border-[#E8E0D9]"
+                        className="h-12 w-10 shrink-0 rounded-lg object-cover border border-[#E8E0D9]"
                       />
                     )}
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-semibold text-[#2F4156]">{it.productName}</p>
                       <p className="text-[#52606D]">
                         SKU: <span className="font-mono">{it.sku}</span>{' '}
@@ -315,7 +315,7 @@ export function OrderDetailClient({
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0 whitespace-nowrap">
                     <p className="text-[#52606D]">
                       {it.quantity} × {formatCurrency(it.unitPrice)}
                     </p>
@@ -366,7 +366,7 @@ export function OrderDetailClient({
               <p className="text-sm font-bold text-[#2F4156]">{order.customerName}</p>
               <p className="text-[#2F4156] mt-0.5">Phone: {order.customerPhone}</p>
               {order.customerEmail && (
-                <p className="text-[#52606D]">Email: {order.customerEmail}</p>
+                <p className="text-[#52606D] break-all">Email: {order.customerEmail}</p>
               )}
               <p className="text-[#52606D] mt-2 leading-relaxed">
                 {order.shippingAddressLine}, {order.shippingArea || ''},{' '}
@@ -455,7 +455,7 @@ export function OrderDetailClient({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-[#2F4156] mb-1">
                     Courier Provider
@@ -596,10 +596,10 @@ export function OrderDetailClient({
                   {order.assignments.map((a) => (
                     <div
                       key={a.id}
-                      className="flex justify-between rounded-lg bg-[#F5F1EE] px-3 py-1.5"
+                      className="flex justify-between gap-2 rounded-lg bg-[#F5F1EE] px-3 py-1.5"
                     >
-                      <span className="font-medium text-[#2F4156]">{a.staffName}</span>
-                      <span className="text-[10px] font-semibold text-[#567C8D]">
+                      <span className="font-medium text-[#2F4156] min-w-0">{a.staffName}</span>
+                      <span className="text-[10px] font-semibold text-[#567C8D] shrink-0 whitespace-nowrap">
                         {a.roleType}
                       </span>
                     </div>
@@ -617,7 +617,7 @@ export function OrderDetailClient({
               </h3>
 
               <form onSubmit={handleVerifyPayment} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-[#2F4156] mb-1">
                       Payment Status
@@ -675,7 +675,7 @@ export function OrderDetailClient({
                     value={refundReason}
                     onChange={(e) => setRefundReason(e.target.value)}
                     placeholder="Reason for refund..."
-                    className="flex-1 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-1.5 text-xs"
+                    className="flex-1 min-w-0 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-1.5 text-xs"
                   />
                   <button
                     type="button"
