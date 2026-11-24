@@ -73,7 +73,7 @@ export function ConfirmDialog({
             <p className="mt-1 text-sm leading-relaxed text-[#52606D]">{message}</p>
           </div>
         </div>
-        <div className="mt-6 flex items-center justify-end gap-2">
+        <div className="mt-6 flex flex-wrap items-center justify-end gap-2">
           <Button
             type="button"
             variant="outline"
