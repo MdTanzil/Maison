@@ -523,8 +523,9 @@ export async function upsertCategoryAction(data: {
   const user = await requirePermission('categories.manage');
 
   const slug = slugify(data.name);
+  let saved;
   if (data.id) {
-    await prisma.category.update({
+    saved = await prisma.category.update({
       where: { id: data.id },
       data: {
         name: data.name.trim(),
@@ -537,7 +538,7 @@ export async function upsertCategoryAction(data: {
       },
     });
   } else {
-    await prisma.category.create({
+    saved = await prisma.category.create({
       data: {
         name: data.name.trim(),
         slug: `${slug}-${Math.floor(10 + Math.random() * 89)}`,
@@ -558,10 +559,25 @@ export async function upsertCategoryAction(data: {
     description: `${data.id ? 'Updated' : 'Created'} category "${data.name}"`,
   });
 
+  const productCount = data.id
+    ? await prisma.product.count({ where: { categoryId: saved.id } })
+    : 0;
+
   revalidatePath('/admin/categories');
   revalidatePath('/shop');
   revalidatePath('/');
-  return { ok: true };
+  return {
+    ok: true,
+    category: {
+      id: saved.id,
+      name: saved.name,
+      slug: saved.slug,
+      description: saved.description || '',
+      parentId: saved.parentId,
+      isActive: saved.isActive,
+      productCount,
+    },
+  };
 }
 
 export async function deleteCategoryAction(categoryId: string) {
@@ -601,8 +617,9 @@ export async function upsertBrandAction(data: {
   const user = await requirePermission('categories.manage');
 
   const slug = slugify(data.name);
+  let saved;
   if (data.id) {
-    await prisma.brand.update({
+    saved = await prisma.brand.update({
       where: { id: data.id },
       data: {
         name: data.name.trim(),
@@ -612,7 +629,7 @@ export async function upsertBrandAction(data: {
       },
     });
   } else {
-    await prisma.brand.create({
+    saved = await prisma.brand.create({
       data: {
         name: data.name.trim(),
         slug: `${slug}-${Math.floor(10 + Math.random() * 89)}`,
@@ -630,9 +647,23 @@ export async function upsertBrandAction(data: {
     description: `Saved brand "${data.name}"`,
   });
 
+  const productCount = data.id
+    ? await prisma.product.count({ where: { brandId: saved.id } })
+    : 0;
+
   revalidatePath('/admin/categories');
   revalidatePath('/shop');
-  return { ok: true };
+  return {
+    ok: true,
+    brand: {
+      id: saved.id,
+      name: saved.name,
+      slug: saved.slug,
+      description: saved.description || '',
+      isActive: saved.isActive,
+      productCount,
+    },
+  };
 }
 
 export async function submitProductReviewAction(data: {
