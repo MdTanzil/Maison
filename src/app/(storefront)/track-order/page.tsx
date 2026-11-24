@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, Truck, CheckCircle2, Clock, Package } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { LoadingButton } from '@/components/ui/loading-button';
 
 interface TrackedOrder {
   orderNumber: string;
@@ -101,14 +102,15 @@ export default function TrackOrderPage() {
             placeholder="Order ID, Tracking Code (SF-BD-8827341), or Phone..."
             className="flex-1 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-4 py-3 text-sm text-[#2F4156]"
           />
-          <button
+          <LoadingButton
             type="submit"
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#567C8D] px-6 py-3 text-sm font-semibold text-white hover:bg-[#486878]"
+            loading={loading}
+            loadingText="Searching..."
+            className="h-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#567C8D] px-6 py-3 text-sm font-semibold text-white hover:bg-[#486878]"
           >
             <Search className="h-4 w-4" />
-            <span>{loading ? 'Searching...' : 'Track Order'}</span>
-          </button>
+            <span>Track Order</span>
+          </LoadingButton>
         </form>
 
         {/* Sample quick-click order pills */}
