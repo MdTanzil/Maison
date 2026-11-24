@@ -540,6 +540,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.9,
       ratingCount: 18,
       soldCount: 42,
+      review: { name: 'Nusrat Jahan', rating: 5, title: 'The linen breathes beautifully in Dhaka heat', comment: 'Wore it to an afternoon meeting in Banani and stayed comfortable throughout. The drape is relaxed but the cut still looks sharp.' },
       specifications: {
         Material: '100% Certified Belgian Flax Linen',
         Lining: 'Breathable Bemberg Cupro',
@@ -578,6 +579,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.95,
       ratingCount: 24,
       soldCount: 38,
+      review: { name: 'Tanvir Ahmed', rating: 5, title: 'Beautiful leather, and it fits my laptop', comment: 'Bought it for my wife and she uses it every day. The leather feels sturdy, the stitching is neat, and the suede lining is a lovely touch.' },
       specifications: {
         Exterior: '100% Vegetable-Tanned Full-Grain Calfskin',
         Interior: 'Micro-suede lining with laptop sleeve',
@@ -614,6 +616,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.85,
       ratingCount: 14,
       soldCount: 29,
+      review: { name: 'Priya Das', rating: 4, title: 'Lovely vase, gentle fragrance', comment: 'The stoneware looks even better in person. The diffuser scent is subtle rather than strong, which suits our living room well.' },
       specifications: {
         Material: 'High-fired stoneware ceramic & essential oil blend',
         ScentNotes: 'White Tea, Calabrian Bergamot, Warm Amber, Cedar',
@@ -648,6 +651,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.92,
       ratingCount: 31,
       soldCount: 51,
+      review: { name: 'Arif Rahman', rating: 5, title: 'Understated and well finished', comment: 'The ivory dial and camel strap go with everything I own. Light on the wrist, and the sapphire crystal still looks flawless after weeks of wear.' },
       specifications: {
         CaseDiameter: '38mm 316L Surgical Stainless Steel',
         Crystal: 'Scratch-resistant Domed Sapphire with AR coating',
@@ -683,6 +687,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.88,
       ratingCount: 15,
       soldCount: 27,
+      review: { name: 'Mehjabin Khan', rating: 5, title: 'Arrived the next day, beautifully packed', comment: 'Ordered on Monday evening and it was at my door in Gulshan by Tuesday afternoon. The silk feels soft and the fit is true to size.' },
       specifications: {
         Composition: '70% Grade-6A Mulberry Silk, 30% Cashmere',
         Buttons: 'Genuine Trochus Mother-of-Pearl',
@@ -717,6 +722,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.9,
       ratingCount: 11,
       soldCount: 19,
+      review: { name: 'Sabbir Hossain', rating: 5, title: 'Packaging felt like a gift in itself', comment: 'The throw came in a sturdy keepsake box with tissue and a handwritten note. Warm, soft, and exactly the oatmeal shade shown on the site.' },
       specifications: {
         Dimensions: '140cm × 200cm including twisted fringes',
         Material: '60% Peruvian Baby Alpaca, 40% Merino Wool',
@@ -750,6 +756,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.94,
       ratingCount: 19,
       soldCount: 23,
+      review: { name: 'Farah Islam', rating: 5, title: 'Helpful team, easy exchange', comment: 'I needed a different shade and the concierge team arranged the exchange over WhatsApp within a day. The bag itself is solid and roomy for weekend trips.' },
       specifications: {
         Dimensions: '52cm × 28cm × 25cm (International Carry-On Size)',
         Capacity: '40 Liters',
@@ -783,6 +790,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.82,
       ratingCount: 12,
       soldCount: 31,
+      review: { name: 'Imran Chowdhury', rating: 5, title: 'Crisp linen, excellent tailoring', comment: 'The pleats fall cleanly and the side adjusters mean no belt needed. Easily the best-made trousers I have bought from a local store.' },
       specifications: {
         Fabric: '100% Heavyweight Irish Linen (240 GSM)',
         Waist: 'High-rise with brass side-tab adjusters',
@@ -893,11 +901,10 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       data: {
         productId: p.id,
         userId: customer1.id,
-        customerName: 'Samira Chowdhury',
-        rating: 5,
-        title: 'Exquisite craftsmanship and material quality',
-        comment:
-          'The texture, stitching, and packaging feel genuinely world-class. The warm beige aesthetic matches our wardrobe effortlessly.',
+        customerName: prod.review.name,
+        rating: prod.review.rating,
+        title: prod.review.title,
+        comment: prod.review.comment,
         isVerifiedPurchase: true,
         isApproved: true,
       },
