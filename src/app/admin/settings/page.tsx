@@ -1,6 +1,8 @@
 import React from 'react';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { SettingsAdminClient } from '@/components/admin/settings-admin-client';
+import { CredentialsAdminClient } from '@/components/admin/credentials-admin-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,10 +11,16 @@ export default async function AdminSettingsPage() {
   const settings = await prisma.websiteSettings.findUnique({
     where: { id: 'default' },
   });
+  const sessionUser = await getCurrentUser();
+  const canManageCredentials = hasPermission(sessionUser, 'settings.manage');
+  const paymentJson = (settings?.paymentSettingsJson ?? {}) as Record<string, any>;
+  const creds = (paymentJson.credentials ?? {}) as Record<string, any>;
+  const emailJson = (settings?.emailSettingsJson ?? {}) as Record<string, any>;
 
   return (
-    <SettingsAdminClient
-      initialSettings={{
+    <div className="space-y-6">
+      <SettingsAdminClient
+        initialSettings={{
         storeName: settings?.storeName || 'MAISON BEIGE',
         tagline: settings?.tagline || 'Quiet Luxury & Timeless Essentials',
         contactEmail: settings?.contactEmail || 'concierge@maisonbeige.com',
@@ -40,6 +48,32 @@ export default async function AdminSettingsPage() {
         seoTitle: settings?.seoTitle || '',
         seoDescription: settings?.seoDescription || '',
       }}
-    />
+      />
+      {canManageCredentials && (
+        <CredentialsAdminClient
+          initialCredentials={{
+            smtpHost: emailJson.smtpHost || '',
+            smtpPort: Number(emailJson.smtpPort ?? 587),
+            smtpUser: emailJson.smtpUser || '',
+            smtpSecure: Boolean(emailJson.smtpSecure),
+            fromEmail: emailJson.fromEmail || '',
+            fromName: emailJson.fromName || '',
+            smtpPasswordConfigured: Boolean(emailJson.smtpPassword),
+            bkashAppKey: creds.bkash?.appKey || '',
+            bkashUsername: creds.bkash?.username || '',
+            bkashSandbox: Boolean(creds.bkash?.sandbox ?? true),
+            bkashAppSecretConfigured: Boolean(creds.bkash?.appSecret),
+            bkashPasswordConfigured: Boolean(creds.bkash?.password),
+            nagadMerchantId: creds.nagad?.merchantId || '',
+            nagadPgPublicKey: creds.nagad?.pgPublicKey || '',
+            nagadPrivateKeyConfigured: Boolean(creds.nagad?.merchantPrivateKey),
+            rocketMerchantId: creds.rocket?.merchantId || '',
+            rocketApiUser: creds.rocket?.apiUser || '',
+            rocketSandbox: Boolean(creds.rocket?.sandbox ?? true),
+            rocketPasswordConfigured: Boolean(creds.rocket?.apiPassword),
+          }}
+        />
+      )}
+    </div>
   );
 }

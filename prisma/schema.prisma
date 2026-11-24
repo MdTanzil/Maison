@@ -792,6 +792,7 @@ model WebsiteSettings {
   socialLinksJson         Json?
   paymentSettingsJson     Json?
   courierSettingsJson     Json?
+  emailSettingsJson       Json?
   seoTitle                String   @default("MAISON BEIGE | Luxury Fashion, Home & Lifestyle Store")
   seoDescription          String   @default("Curated beige-led luxury essentials, artisanal apparel, fine leather goods, and modern living pieces.")
   updatedAt               DateTime @updatedAt

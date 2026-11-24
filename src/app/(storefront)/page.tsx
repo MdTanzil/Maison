@@ -133,7 +133,7 @@ export default async function HomePage() {
               <div className="relative rounded-2xl border border-[#E8E0D9] bg-white p-3 shadow-luxury-md">
                 <div className="aspect-[4/5] overflow-hidden rounded-xl bg-[#F5F1EE]">
                   <img
-                    src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1200&q=85"
+                    src="https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1200&q=85"
                     alt="Maison Beige Editorial Look"
                     className="h-full w-full object-cover"
                   />

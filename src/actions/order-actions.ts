@@ -85,6 +85,41 @@ export async function validateCouponServerAction(params: {
   };
 }
 
+export async function getCheckoutProfileAction() {
+  await ensureDatabaseReady();
+  const sessionUser = await getCurrentUser();
+  if (!sessionUser) {
+    return { ok: true, profile: null };
+  }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: sessionUser.id },
+    include: {
+      addresses: { orderBy: { isDefault: 'desc' } },
+    },
+  });
+
+  if (!dbUser) {
+    return { ok: true, profile: null };
+  }
+
+  const defaultAddress = dbUser.addresses[0] ?? null;
+
+  return {
+    ok: true,
+    profile: {
+      name: dbUser.name,
+      email: dbUser.email,
+      phone: dbUser.phone || '',
+      addressLine1: defaultAddress?.addressLine1 || '',
+      area: defaultAddress?.area || '',
+      city: defaultAddress?.city || '',
+      postalCode: defaultAddress?.postalCode || '',
+      zoneType: defaultAddress?.zoneType || 'INSIDE_CITY',
+    },
+  };
+}
+
 export async function placeOrderAction(rawInput: unknown) {
   await ensureDatabaseReady();
   const parsed = checkoutSchema.safeParse(rawInput);
@@ -850,4 +885,128 @@ export async function processOrderRefundAction(params: {
   revalidatePath('/admin/payments');
   revalidatePath('/admin/reports');
   return { ok: true };
+}
+
+export async function deleteOrderAction(orderId: string) {
+  await ensureDatabaseReady();
+  const user = await requireAuth();
+  if (!user.isSuperAdmin) {
+    return { ok: false, error: 'FORBIDDEN: Only a Super Admin can delete orders.' };
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true, statusHistory: true },
+  });
+  if (!order) {
+    return { ok: false, error: 'Order not found.' };
+  }
+
+  // Only cancelled orders can be deleted. Cancelling first restores any
+  // deducted stock via applyOrderStockTransition, so delete never has to
+  // guess the stock state of a live order.
+  if (order.status !== 'CANCELLED') {
+    return {
+      ok: false,
+      error: 'Only cancelled orders can be deleted. Cancel the order first.',
+    };
+  }
+
+  // Defensive: if deducted stock was somehow never restored, restore it now.
+  // (Normally cancel already did this and stockDeducted is false.)
+  if (order.stockDeducted) {
+    await applyOrderStockTransition({
+      orderId: order.id,
+      targetStatus: 'CANCELLED',
+      performedById: user.id,
+    });
+  }
+
+  // A stock reservation is still held only when the order never reached a
+  // stock-deducting status (confirm releases the reservation) AND live
+  // ORDER_RESERVE transactions exist for it (seeded orders never reserved
+  // stock, so they must not release anything).
+  const everDeducted = order.statusHistory.some((h) =>
+    ['CONFIRMED', 'PROCESSING', 'READY_FOR_SHIPMENT', 'SHIPPED', 'DELIVERED'].includes(
+      h.status
+    )
+  );
+  let reservedHeld = false;
+  if (!everDeducted) {
+    const reserveTxns = await prisma.inventoryTransaction.findMany({
+      where: { referenceId: order.orderNumber, type: 'ORDER_RESERVE' },
+    });
+    reservedHeld = reserveTxns.length > 0;
+  }
+
+  const profile = order.customerId
+    ? await prisma.customerProfile.findUnique({ where: { userId: order.customerId } })
+    : null;
+
+  await prisma.$transaction(async (tx) => {
+    if (reservedHeld) {
+      for (const item of order.items) {
+        const inv = await tx.inventory.findUnique({
+          where: { productId: item.productId },
+        });
+        if (inv && inv.reservedStock > 0) {
+          const newReserved = Math.max(0, inv.reservedStock - item.quantity);
+          await tx.inventory.update({
+            where: { productId: item.productId },
+            data: { reservedStock: newReserved },
+          });
+          const prod = await tx.product.findUnique({ where: { id: item.productId } });
+          await tx.inventoryTransaction.create({
+            data: {
+              productId: item.productId,
+              variantId: item.variantId,
+              type: 'ADJUSTMENT',
+              quantity: item.quantity,
+              previousStock: prod?.stockQuantity ?? 0,
+              newStock: prod?.stockQuantity ?? 0,
+              reason: `Released reservation for deleted order ${order.orderNumber}`,
+              referenceId: order.orderNumber,
+              performedById: user.id,
+            },
+          });
+        }
+      }
+    }
+
+    // Mirror the placement-time profile increment (placeOrderAction) so the
+    // deleted order stops counting toward the customer's lifetime totals.
+    // Loyalty points are deliberately left untouched.
+    if (profile) {
+      await tx.customerProfile.update({
+        where: { userId: profile.userId },
+        data: {
+          totalOrders: Math.max(0, profile.totalOrders - 1),
+          totalSpent: Math.max(0, Number(profile.totalSpent) - Number(order.grandTotal)),
+        },
+      });
+    }
+
+    // All order dependents cascade at the DB level (OrderItem,
+    // OrderStatusHistory, OrderAssignment, Payment, Refund, Shipment,
+    // CouponUsage — see schema.prisma), so deleting the order removes them.
+    // InventoryTransaction / StaffActivityLog rows only carry the order
+    // number as a string and are kept as the audit trail.
+    await tx.order.delete({ where: { id: order.id } });
+  });
+
+  await logStaffActivity({
+    user,
+    action: 'ORDER_DELETED',
+    module: 'Orders',
+    targetId: order.orderNumber,
+    description: `Deleted cancelled order ${order.orderNumber} (${order.customerName}, ৳${Number(order.grandTotal).toLocaleString()})`,
+  });
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/orders');
+  revalidatePath('/admin/reports');
+  revalidatePath('/admin/customers');
+  revalidatePath('/admin/inventory');
+  revalidatePath('/account');
+  return { ok: true, orderNumber: order.orderNumber };
 }

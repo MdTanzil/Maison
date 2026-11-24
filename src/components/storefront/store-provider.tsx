@@ -74,6 +74,13 @@ export function StoreProvider({
         const parsed: string[] = JSON.parse(savedWishlist);
         setWishlistIds((prev) => Array.from(new Set([...prev, ...parsed])));
       }
+      const savedCoupon = localStorage.getItem('mb_luxury_coupon_v1');
+      if (savedCoupon) {
+        const parsedCoupon: AppliedCoupon | null = JSON.parse(savedCoupon);
+        if (parsedCoupon) {
+          setAppliedCoupon(parsedCoupon);
+        }
+      }
     } catch {
       // ignore storage errors
     }
@@ -85,10 +92,15 @@ export function StoreProvider({
     try {
       localStorage.setItem('mb_luxury_cart_v1', JSON.stringify(cart));
       localStorage.setItem('mb_luxury_wishlist_v1', JSON.stringify(wishlistIds));
+      if (appliedCoupon) {
+        localStorage.setItem('mb_luxury_coupon_v1', JSON.stringify(appliedCoupon));
+      } else {
+        localStorage.removeItem('mb_luxury_coupon_v1');
+      }
     } catch {
       // ignore storage errors
     }
-  }, [cart, wishlistIds, hydrated]);
+  }, [cart, wishlistIds, appliedCoupon, hydrated]);
 
   const showToast = (
     title: string,

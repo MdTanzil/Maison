@@ -7,6 +7,7 @@ import { requirePermission } from '@/lib/auth/session';
 import { couponSchema, staffSchema } from '@/lib/validations/schemas';
 import { slugify } from '@/lib/utils';
 import { logStaffActivity } from '@/lib/services/audit';
+import { encryptSecret } from '@/lib/services/credentials';
 import { CourierProvider } from '@prisma/client';
 
 export async function upsertStaffMemberAction(rawInput: Record<string, unknown>) {
@@ -513,6 +514,96 @@ export async function updateWebsiteSettingsAction(data: {
   });
 
   revalidatePath('/', 'layout');
+  revalidatePath('/admin/settings');
+  return { ok: true };
+}
+
+export type IntegrationCredentialsInput = {
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string; // empty = keep existing
+  smtpSecure: boolean;
+  fromEmail: string;
+  fromName: string;
+  bkashAppKey: string;
+  bkashAppSecret: string; // empty = keep existing
+  bkashUsername: string;
+  bkashPassword: string; // empty = keep existing
+  bkashSandbox: boolean;
+  nagadMerchantId: string;
+  nagadMerchantPrivateKey: string; // empty = keep existing
+  nagadPgPublicKey: string;
+  rocketMerchantId: string;
+  rocketApiUser: string;
+  rocketApiPassword: string; // empty = keep existing
+  rocketSandbox: boolean;
+};
+
+export async function updateIntegrationCredentialsAction(data: IntegrationCredentialsInput) {
+  await ensureDatabaseReady();
+  const admin = await requirePermission('settings.manage');
+
+  const current = await prisma.websiteSettings.findUnique({ where: { id: 'default' } });
+  const prevPayment = (current?.paymentSettingsJson ?? {}) as Record<string, any>;
+  const prevCreds = (prevPayment.credentials ?? {}) as Record<string, any>;
+  const prevEmail = (current?.emailSettingsJson ?? {}) as Record<string, any>;
+
+  // A blank secret field keeps the stored value; a filled one replaces it (encrypted).
+  const keepOrEncrypt = (next: string, prev?: string) => {
+    if (next && next.trim()) return encryptSecret(next.trim());
+    return prev ?? '';
+  };
+
+  const bkash = {
+    appKey: data.bkashAppKey.trim(),
+    appSecret: keepOrEncrypt(data.bkashAppSecret, prevCreds.bkash?.appSecret),
+    username: data.bkashUsername.trim(),
+    password: keepOrEncrypt(data.bkashPassword, prevCreds.bkash?.password),
+    sandbox: Boolean(data.bkashSandbox),
+  };
+  const nagad = {
+    merchantId: data.nagadMerchantId.trim(),
+    merchantPrivateKey: keepOrEncrypt(data.nagadMerchantPrivateKey, prevCreds.nagad?.merchantPrivateKey),
+    pgPublicKey: data.nagadPgPublicKey.trim(),
+  };
+  const rocket = {
+    merchantId: data.rocketMerchantId.trim(),
+    apiUser: data.rocketApiUser.trim(),
+    apiPassword: keepOrEncrypt(data.rocketApiPassword, prevCreds.rocket?.apiPassword),
+    sandbox: Boolean(data.rocketSandbox),
+  };
+  const email = {
+    smtpHost: data.smtpHost.trim(),
+    smtpPort: Number(data.smtpPort) || 587,
+    smtpUser: data.smtpUser.trim(),
+    smtpPassword: keepOrEncrypt(data.smtpPassword, prevEmail.smtpPassword),
+    smtpSecure: Boolean(data.smtpSecure),
+    fromEmail: data.fromEmail.trim(),
+    fromName: data.fromName.trim(),
+  };
+
+  await prisma.websiteSettings.upsert({
+    where: { id: 'default' },
+    update: {
+      paymentSettingsJson: { ...prevPayment, credentials: { bkash, nagad, rocket } },
+      emailSettingsJson: email,
+    },
+    create: {
+      id: 'default',
+      paymentSettingsJson: { credentials: { bkash, nagad, rocket } },
+      emailSettingsJson: email,
+    },
+  });
+
+  await logStaffActivity({
+    user: admin,
+    action: 'CREDENTIALS_UPDATED',
+    module: 'Administration',
+    targetId: 'default',
+    description: 'Updated email and payment integration credentials.',
+  });
+
   revalidatePath('/admin/settings');
   return { ok: true };
 }

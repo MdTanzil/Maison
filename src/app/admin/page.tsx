@@ -34,9 +34,13 @@ export default async function AdminDashboardPage({
   const range = params.range || '30d';
 
   const now = new Date();
+  const dhakaNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }));
+  const dhakaMidnight = new Date(
+    Date.UTC(dhakaNow.getFullYear(), dhakaNow.getMonth(), dhakaNow.getDate()) - 6 * 3600 * 1000
+  );
   let startDate: Date | undefined;
   if (range === 'today') {
-    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    startDate = dhakaMidnight;
   } else if (range === '7d') {
     startDate = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
   } else if (range === '30d') {
@@ -100,7 +104,7 @@ export default async function AdminDashboardPage({
   const activeOrders = orders.filter((o) => !['CANCELLED', 'REFUNDED', 'RETURNED'].includes(o.status));
   const totalRevenue = activeOrders.reduce((acc, o) => acc + Number(o.grandTotal), 0);
 
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfToday = dhakaMidnight;
   const todaysSales = activeOrders
     .filter((o) => o.createdAt >= startOfToday)
     .reduce((acc, o) => acc + Number(o.grandTotal), 0);
@@ -123,13 +127,14 @@ export default async function AdminDashboardPage({
   const dateMap = new Map<string, { date: string; revenue: number; orders: number }>();
   for (let i = 6; i >= 0; i--) {
     const d = new Date(now.getTime() - i * 24 * 3600 * 1000);
-    const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+    const label = d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', timeZone: 'Asia/Dhaka' });
     dateMap.set(label, { date: label, revenue: 0, orders: 0 });
   }
   for (const o of orders) {
     const label = o.createdAt.toLocaleDateString('en-US', {
       month: 'short',
       day: '2-digit',
+      timeZone: 'Asia/Dhaka',
     });
     const entry = dateMap.get(label) || { date: label, revenue: 0, orders: 0 };
     if (!['CANCELLED', 'REFUNDED'].includes(o.status)) {

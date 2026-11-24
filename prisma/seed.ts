@@ -287,9 +287,9 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       userRoles: { create: { roleId: roleMap.CUSTOMER } },
       customerProfile: {
         create: {
-          loyaltyPoints: 420,
-          totalOrders: 3,
-          totalSpent: 28950,
+          loyaltyPoints: 259,
+          totalOrders: 2,
+          totalSpent: 25960,
           internalNotes: 'VIP client — prefers afternoon delivery in Banani.',
         },
       },
@@ -321,9 +321,9 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       userRoles: { create: { roleId: roleMap.CUSTOMER } },
       customerProfile: {
         create: {
-          loyaltyPoints: 180,
+          loyaltyPoints: 286,
           totalOrders: 2,
-          totalSpent: 14600,
+          totalSpent: 28600,
           internalNotes: 'Corporate client from Chattogram.',
         },
       },
@@ -435,7 +435,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       name: 'Apparel & Tailoring',
       slug: 'apparel-tailoring',
       description: 'Breathable Belgian linen, mulberry silk, and relaxed architectural silhouettes.',
-      imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80',
+      imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=80',
       seoTitle: 'Luxury Linen & Tailored Apparel | Maison Beige',
       sortOrder: 1,
     },
@@ -540,6 +540,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.9,
       ratingCount: 18,
       soldCount: 42,
+      review: { name: 'Nusrat Jahan', rating: 5, title: 'The linen breathes beautifully in Dhaka heat', comment: 'Wore it to an afternoon meeting in Banani and stayed comfortable throughout. The drape is relaxed but the cut still looks sharp.' },
       specifications: {
         Material: '100% Certified Belgian Flax Linen',
         Lining: 'Breathable Bemberg Cupro',
@@ -548,7 +549,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         Care: 'Dry clean or gentle cold steam',
       },
       images: [
-        'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=1000&q=85',
         'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
@@ -578,6 +579,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.95,
       ratingCount: 24,
       soldCount: 38,
+      review: { name: 'Tanvir Ahmed', rating: 5, title: 'Beautiful leather, and it fits my laptop', comment: 'Bought it for my wife and she uses it every day. The leather feels sturdy, the stitching is neat, and the suede lining is a lovely touch.' },
       specifications: {
         Exterior: '100% Vegetable-Tanned Full-Grain Calfskin',
         Interior: 'Micro-suede lining with laptop sleeve',
@@ -585,8 +587,8 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         Hardware: 'Brushed Anti-Tarnish Brass',
       },
       images: [
-        'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1000&q=85',
         'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
         { sku: 'MB-BAG-201-SAND', title: 'Sandstone Beige', size: 'One Size', color: 'Sandstone', colorHex: '#D8C8B8', stock: 9 },
@@ -614,6 +616,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.85,
       ratingCount: 14,
       soldCount: 29,
+      review: { name: 'Priya Das', rating: 4, title: 'Lovely vase, gentle fragrance', comment: 'The stoneware looks even better in person. The diffuser scent is subtle rather than strong, which suits our living room well.' },
       specifications: {
         Material: 'High-fired stoneware ceramic & essential oil blend',
         ScentNotes: 'White Tea, Calabrian Bergamot, Warm Amber, Cedar',
@@ -648,6 +651,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.92,
       ratingCount: 31,
       soldCount: 51,
+      review: { name: 'Arif Rahman', rating: 5, title: 'Understated and well finished', comment: 'The ivory dial and camel strap go with everything I own. Light on the wrist, and the sapphire crystal still looks flawless after weeks of wear.' },
       specifications: {
         CaseDiameter: '38mm 316L Surgical Stainless Steel',
         Crystal: 'Scratch-resistant Domed Sapphire with AR coating',
@@ -655,8 +659,8 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         Strap: '20mm Italian Stitchless Nubuck Leather',
       },
       images: [
-        'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=85',
         'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
         { sku: 'MB-ACC-401-IVORY', title: 'Ivory Dial / Camel Strap', size: '38mm', color: 'Camel', colorHex: '#C19A6B', stock: 4 },
@@ -675,7 +679,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       costPrice: 4100,
       categoryId: catApparel.id,
       brandId: brandMaison.id,
-      stockQuantity: 22,
+      stockQuantity: 36,
       lowStockThreshold: 5,
       isFeatured: false,
       isBestSeller: true,
@@ -683,6 +687,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.88,
       ratingCount: 15,
       soldCount: 27,
+      review: { name: 'Mehjabin Khan', rating: 5, title: 'Arrived the next day, beautifully packed', comment: 'Ordered on Monday evening and it was at my door in Gulshan by Tuesday afternoon. The silk feels soft and the fit is true to size.' },
       specifications: {
         Composition: '70% Grade-6A Mulberry Silk, 30% Cashmere',
         Buttons: 'Genuine Trochus Mother-of-Pearl',
@@ -692,8 +697,10 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
         'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
+        { sku: 'MB-APR-102-S-PEARL', title: 'Small / Pearl Beige', size: 'S', color: 'Pearl Beige', colorHex: '#F3ECE3', stock: 8 },
         { sku: 'MB-APR-102-M-PEARL', title: 'Medium / Pearl Beige', size: 'M', color: 'Pearl Beige', colorHex: '#F3ECE3', stock: 12 },
         { sku: 'MB-APR-102-L-TEAL', title: 'Large / Muted Teal', size: 'L', color: 'Muted Teal', colorHex: '#567C8D', stock: 10 },
+        { sku: 'MB-APR-102-XL-TEAL', title: 'Extra Large / Muted Teal', size: 'XL', color: 'Muted Teal', colorHex: '#567C8D', stock: 6 },
       ],
     },
     {
@@ -717,13 +724,14 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.9,
       ratingCount: 11,
       soldCount: 19,
+      review: { name: 'Sabbir Hossain', rating: 5, title: 'Packaging felt like a gift in itself', comment: 'The throw came in a sturdy keepsake box with tissue and a handwritten note. Warm, soft, and exactly the oatmeal shade shown on the site.' },
       specifications: {
         Dimensions: '140cm × 200cm including twisted fringes',
         Material: '60% Peruvian Baby Alpaca, 40% Merino Wool',
         Certification: 'OEKO-TEX Standard 100 Certified',
       },
       images: [
-        'https://images.unsplash.com/photo-1580301762395-21ce84d00bc6?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1731404247714-f19f610b32d4?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
         { sku: 'MB-HOM-302-OAT', title: 'Undyed Oatmeal', size: '140x200cm', color: 'Oatmeal', colorHex: '#E6DEC8', stock: 3 },
@@ -750,13 +758,14 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.94,
       ratingCount: 19,
       soldCount: 23,
+      review: { name: 'Farah Islam', rating: 5, title: 'Helpful team, easy exchange', comment: 'I needed a different shade and the concierge team arranged the exchange over WhatsApp within a day. The bag itself is solid and roomy for weekend trips.' },
       specifications: {
         Dimensions: '52cm × 28cm × 25cm (International Carry-On Size)',
         Capacity: '40 Liters',
         Materials: '18oz Waxed Belgian Linen Canvas & Full-Grain Calfskin',
       },
       images: [
-        'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1000&q=85',
+        'https://images.unsplash.com/photo-1525103504173-8dc1582c7430?auto=format&fit=crop&w=1000&q=85',
       ],
       variants: [
         { sku: 'MB-BAG-202-CANV', title: 'Sand Canvas & Cognac Leather', size: '40L Cabin', color: 'Sand / Cognac', colorHex: '#C2A886', stock: 11 },
@@ -775,7 +784,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       costPrice: 3100,
       categoryId: catApparel.id,
       brandId: brandAurelia.id,
-      stockQuantity: 19,
+      stockQuantity: 33,
       lowStockThreshold: 5,
       isFeatured: false,
       isBestSeller: true,
@@ -783,6 +792,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       ratingAverage: 4.82,
       ratingCount: 12,
       soldCount: 31,
+      review: { name: 'Imran Chowdhury', rating: 5, title: 'Crisp linen, excellent tailoring', comment: 'The pleats fall cleanly and the side adjusters mean no belt needed. Easily the best-made trousers I have bought from a local store.' },
       specifications: {
         Fabric: '100% Heavyweight Irish Linen (240 GSM)',
         Waist: 'High-rise with brass side-tab adjusters',
@@ -794,6 +804,8 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       variants: [
         { sku: 'MB-APR-103-S-IVR', title: 'Small (30) / Warm Ivory', size: 'S', color: 'Warm Ivory', colorHex: '#F5F1EE', stock: 9 },
         { sku: 'MB-APR-103-M-IVR', title: 'Medium (32) / Warm Ivory', size: 'M', color: 'Warm Ivory', colorHex: '#F5F1EE', stock: 10 },
+        { sku: 'MB-APR-103-L-IVR', title: 'Large (34) / Warm Ivory', size: 'L', color: 'Warm Ivory', colorHex: '#F5F1EE', stock: 8 },
+        { sku: 'MB-APR-103-XL-IVR', title: 'Extra Large (36) / Warm Ivory', size: 'XL', color: 'Warm Ivory', colorHex: '#F5F1EE', stock: 6 },
       ],
     },
   ];
@@ -893,11 +905,10 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       data: {
         productId: p.id,
         userId: customer1.id,
-        customerName: 'Samira Chowdhury',
-        rating: 5,
-        title: 'Exquisite craftsmanship and material quality',
-        comment:
-          'The texture, stitching, and packaging feel genuinely world-class. The warm beige aesthetic matches our wardrobe effortlessly.',
+        customerName: prod.review.name,
+        rating: prod.review.rating,
+        title: prod.review.title,
+        comment: prod.review.comment,
         isVerifiedPurchase: true,
         isApproved: true,
       },
@@ -976,7 +987,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       status: 'DELIVERED' as const,
       paymentMethod: 'COD' as const,
       paymentStatus: 'VERIFIED' as const,
-      discountAmount: 845,
+      discountAmount: 1240,
       shippingCharge: 0,
       couponCode: 'LUXURY10',
       daysAgo: 4,
@@ -1001,7 +1012,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       paymentMethod: 'BKASH_MANUAL' as const,
       paymentStatus: 'VERIFIED' as const,
       discountAmount: 500,
-      shippingCharge: 150,
+      shippingCharge: 0,
       couponCode: 'WELCOME500',
       daysAgo: 2,
       items: [createdProducts[1]],
@@ -1049,7 +1060,7 @@ export async function seedDatabase(prismaClient?: PrismaClient) {
       paymentMethod: 'COD' as const,
       paymentStatus: 'PENDING' as const,
       discountAmount: 0,
-      shippingCharge: 80,
+      shippingCharge: 0,
       couponCode: null,
       daysAgo: 0,
       items: [createdProducts[4], createdProducts[7]],
