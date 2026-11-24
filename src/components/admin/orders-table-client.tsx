@@ -13,12 +13,14 @@ import {
   FileText,
   Receipt,
   UserPlus,
+  Trash2,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   bulkUpdateOrderStatusAction,
   updateOrderStatusAction,
   assignOrderToStaffAction,
+  deleteOrderAction,
 } from '@/actions/order-actions';
 import { useStore } from '@/components/storefront/store-provider';
 import { OrderStatus } from '@prisma/client';
@@ -44,6 +46,7 @@ export function OrdersTableClient({
   initialStaff,
   canAssign,
   canUpdateStatus,
+  canDeleteOrder,
 }: {
   orders: Array<{
     id: string;
@@ -68,6 +71,7 @@ export function OrdersTableClient({
   initialStaff: string;
   canAssign: boolean;
   canUpdateStatus: boolean;
+  canDeleteOrder: boolean;
 }) {
   const router = useRouter();
   const { showToast } = useStore();
@@ -79,6 +83,7 @@ export function OrdersTableClient({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkStatus, setBulkStatus] = useState<OrderStatus>('CONFIRMED');
   const [processingBulk, setProcessingBulk] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -156,6 +161,22 @@ export function OrdersTableClient({
       showToast('Staff Assigned', 'Assigned order to staff member.', 'success');
       router.refresh();
     }
+  };
+
+  const handleDeleteOrder = async (orderId: string, orderNumber: string) => {
+    // Two-click confirmation: first click arms, second click deletes.
+    if (confirmDeleteId !== orderId) {
+      setConfirmDeleteId(orderId);
+      return;
+    }
+    setConfirmDeleteId(null);
+    const res = await deleteOrderAction(orderId);
+    if (!res.ok) {
+      showToast('Delete Failed', res.error, 'error');
+      return;
+    }
+    showToast('Order Deleted', `Cancelled order ${orderNumber} was permanently deleted.`, 'success');
+    router.refresh();
   };
 
   return (
@@ -460,6 +481,27 @@ export function OrdersTableClient({
                           <Receipt className="h-3.5 w-3.5" />
                           <span>80mm</span>
                         </Link>
+                        {canDeleteOrder && o.status === 'CANCELLED' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrder(o.id, o.orderNumber)}
+                            className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold ${
+                              confirmDeleteId === o.id
+                                ? 'bg-rose-600 text-white'
+                                : 'border border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100'
+                            }`}
+                            title={
+                              confirmDeleteId === o.id
+                                ? 'Click again to permanently delete this cancelled order'
+                                : 'Delete this cancelled order'
+                            }
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>
+                              {confirmDeleteId === o.id ? 'Confirm delete?' : 'Delete'}
+                            </span>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

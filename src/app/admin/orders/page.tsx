@@ -42,6 +42,7 @@ export default async function AdminOrdersPage({
         user.permissions.includes('orders.update_status') ||
         user.permissions.includes('orders.confirm')
       }
+      canDeleteOrder={user.isSuperAdmin}
       staffList={staffUsers.map((s) => ({
         id: s.id,
         name: s.name,
