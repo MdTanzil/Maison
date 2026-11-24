@@ -85,20 +85,20 @@ export function StorefrontNavbar({
 
       {/* Main Header */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between gap-4">
+        <div className="flex h-20 items-center justify-between gap-2 sm:gap-4">
           {/* Mobile Menu Trigger */}
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden rounded-lg p-2 text-[#2F4156] hover:bg-[#E8E0D9]/50"
+            className="shrink-0 lg:hidden rounded-lg p-1.5 sm:p-2 text-[#2F4156] hover:bg-[#E8E0D9]/50"
             aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
 
           {/* Brand Logo */}
-          <Link href="/" className="flex flex-col">
-            <span className="font-serif text-2xl sm:text-3xl font-semibold tracking-[0.18em] text-[#2F4156]">
+          <Link href="/" className="flex min-w-0 flex-col">
+            <span className="truncate font-serif text-xl sm:text-2xl lg:text-3xl font-semibold tracking-[0.18em] text-[#2F4156]">
               {storeName}
             </span>
             <span className="text-[10px] uppercase tracking-[0.28em] text-[#567C8D]">
@@ -109,7 +109,7 @@ export function StorefrontNavbar({
           {/* Search Bar with Quick Suggestions */}
           <form
             onSubmit={handleSearch}
-            className="hidden md:flex flex-1 max-w-md mx-6 relative"
+            className="hidden md:flex flex-1 min-w-0 max-w-md mx-6 relative"
           >
             <input
               type="text"
@@ -141,7 +141,7 @@ export function StorefrontNavbar({
 
             <Link
               href="/wishlist"
-              className="relative rounded-full p-2.5 text-[#2F4156] hover:bg-white transition-colors border border-transparent hover:border-[#E8E0D9]"
+              className="relative hidden sm:inline-flex items-center justify-center rounded-full p-2 sm:p-2.5 text-[#2F4156] hover:bg-white transition-colors border border-transparent hover:border-[#E8E0D9]"
               title="Wishlist"
             >
               <Heart className="h-5 w-5" />
@@ -154,7 +154,7 @@ export function StorefrontNavbar({
 
             <Link
               href="/cart"
-              className="relative rounded-full p-2.5 text-[#2F4156] hover:bg-white transition-colors border border-transparent hover:border-[#E8E0D9]"
+              className="relative rounded-full p-2 sm:p-2.5 text-[#2F4156] hover:bg-white transition-colors border border-transparent hover:border-[#E8E0D9]"
               title="Shopping Bag"
             >
               <ShoppingBag className="h-5 w-5" />
@@ -179,7 +179,7 @@ export function StorefrontNavbar({
                   onClick={handleLogout}
                   disabled={signingOut}
                   title="Sign Out"
-                  className="rounded-full p-2 text-[#52606D] hover:text-rose-600 hover:bg-white transition-colors disabled:opacity-60"
+                  className="hidden sm:inline-flex rounded-full p-2 text-[#52606D] hover:text-rose-600 hover:bg-white transition-colors disabled:opacity-60"
                 >
                   {signingOut ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -194,7 +194,7 @@ export function StorefrontNavbar({
                 className="inline-flex items-center gap-1.5 rounded-full border border-[#E8E0D9] bg-white px-3.5 py-2 text-xs font-medium text-[#2F4156] hover:border-[#567C8D] transition-colors"
               >
                 <User className="h-3.5 w-3.5 text-[#567C8D]" />
-                <span>Sign In</span>
+                <span className="hidden sm:inline">Sign In</span>
               </Link>
             )}
           </div>
@@ -270,6 +270,23 @@ export function StorefrontNavbar({
               >
                 Admin Management Console
               </Link>
+            )}
+            <Link
+              href="/wishlist"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-[#2F4156] hover:bg-[#F5F1EE]"
+            >
+              Wishlist
+            </Link>
+            {user && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={signingOut}
+                className="rounded-lg px-3 py-2 text-left text-sm font-medium text-[#2F4156] hover:bg-[#F5F1EE] disabled:opacity-60"
+              >
+                {signingOut ? 'Signing Out...' : 'Sign Out'}
+              </button>
             )}
           </div>
         </div>
