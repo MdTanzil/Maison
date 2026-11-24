@@ -141,10 +141,10 @@ export default function TrackOrderPage() {
 
         {order && (
           <div className="space-y-6 pt-4 border-t border-[#E8E0D9]">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 rounded-xl bg-[#F5F1EE] p-4 border border-[#E8E0D9]">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 rounded-xl bg-[#F5F1EE] p-4 border border-[#E8E0D9]">
+              <div className="min-w-0">
                 <p className="text-xs text-[#52606D]">Order Number</p>
-                <p className="text-sm font-mono font-bold text-[#2F4156]">
+                <p className="text-sm font-mono font-bold text-[#2F4156] break-all">
                   {order.orderNumber}
                 </p>
               </div>
@@ -154,9 +154,9 @@ export default function TrackOrderPage() {
                   {order.status}
                 </span>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs text-[#52606D]">Courier &amp; Tracking</p>
-                <p className="text-xs font-semibold text-[#2F4156] mt-0.5">
+                <p className="text-xs font-semibold text-[#2F4156] mt-0.5 break-all">
                   {order.shipment?.courierProvider || 'INTERNAL'} •{' '}
                   <span className="font-mono text-[#567C8D]">
                     {order.shipment?.trackingNumber || 'Pending'}
@@ -226,9 +226,9 @@ export default function TrackOrderPage() {
                 {order.items.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between px-4 py-3 text-xs"
+                    className="flex items-center justify-between gap-3 px-4 py-3 text-xs"
                   >
-                    <div>
+                    <div className="min-w-0">
                       <span className="font-semibold text-[#2F4156]">
                         {item.productName}
                       </span>
@@ -237,7 +237,7 @@ export default function TrackOrderPage() {
                       )}
                       <span className="text-[#52606D] ml-2">× {item.quantity}</span>
                     </div>
-                    <span className="font-bold text-[#2F4156]">
+                    <span className="font-bold text-[#2F4156] shrink-0">
                       {formatCurrency(item.totalPrice)}
                     </span>
                   </div>
