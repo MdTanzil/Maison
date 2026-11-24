@@ -236,7 +236,7 @@ export function ProductDetailClient({
             </div>
 
             {/* Price Display */}
-            <div className="flex items-baseline gap-3">
+            <div className="flex flex-wrap items-baseline gap-3">
               <span className="text-3xl font-bold text-[#2F4156]">
                 {formatCurrency(effectivePrice)}
               </span>
@@ -383,10 +383,10 @@ export function ProductDetailClient({
                     {Object.entries(product.specifications).map(([key, val]) => (
                       <div
                         key={key}
-                        className="flex items-center justify-between px-4 py-2 text-xs"
+                        className="flex items-center justify-between gap-4 px-4 py-2 text-xs"
                       >
                         <span className="font-medium text-[#52606D]">{key}</span>
-                        <span className="font-semibold text-[#2F4156]">{String(val)}</span>
+                        <span className="font-semibold text-[#2F4156] text-right">{String(val)}</span>
                       </div>
                     ))}
                   </div>
@@ -428,11 +428,11 @@ export function ProductDetailClient({
             <div className="space-y-4 divide-y divide-[#E8E0D9]">
               {product.reviews.map((r) => (
                 <div key={r.id} className="pt-4 first:pt-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-[#2F4156]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-semibold text-[#2F4156] min-w-0">
                       {r.customerName}
                     </span>
-                    <div className="flex items-center gap-1 text-[#567C8D]">
+                    <div className="flex items-center gap-1 text-[#567C8D] shrink-0">
                       {Array.from({ length: r.rating }).map((_, i) => (
                         <Star key={i} className="h-3.5 w-3.5 fill-current" />
                       ))}
