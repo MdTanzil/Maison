@@ -41,6 +41,23 @@ export function NotificationBell() {
     refresh();
   }, []);
 
+  // Poll for new notifications every 30 seconds so the badge and list
+  // update without a page reload. Pauses while the tab is hidden, and
+  // refreshes immediately when the tab becomes visible again.
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') refresh();
+    }
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') refresh();
+    }, 30000);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     function handleClickOutside(e: MouseEvent) {
