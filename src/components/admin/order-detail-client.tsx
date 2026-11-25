@@ -9,11 +9,13 @@ import {
   Receipt,
   CheckCircle2,
   UserPlus,
+  UserX,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   updateOrderStatusAction,
   assignOrderToStaffAction,
+  unassignStaffFromOrderAction,
   verifyPaymentAction,
   processOrderRefundAction,
 } from '@/actions/order-actions';
@@ -79,6 +81,7 @@ export function OrderDetailClient({
     }>;
     assignments: Array<{
       id: string;
+      staffId: string;
       staffName: string;
       roleType: string;
       status: string;
@@ -103,6 +106,7 @@ export function OrderDetailClient({
     canUpdateStatus: boolean;
     canAssign: boolean;
     canVerifyPayment: boolean;
+    isSuperAdmin: boolean;
   };
   allowedStatuses: OrderStatus[];
 }) {
@@ -193,6 +197,35 @@ export function OrderDetailClient({
     } finally {
       setAssigning(false);
     }
+  };
+
+  const handleUnassignStaff = (assignment: {
+    staffId: string;
+    staffName: string;
+    roleType: string;
+  }) => {
+    setConfirm({
+      title: 'Unassign Staff',
+      message: `Remove ${assignment.staffName} (${assignment.roleType}) from order ${order.orderNumber}? They will no longer see this order in their assigned list.`,
+      confirmLabel: 'Unassign',
+      destructive: true,
+      onConfirm: async () => {
+        const res = await unassignStaffFromOrderAction({
+          orderId: order.id,
+          staffId: assignment.staffId,
+        });
+        if (!res.ok) {
+          showToast('Unassign Failed', res.error, 'error');
+          return;
+        }
+        showToast(
+          'Staff Unassigned',
+          `Removed ${assignment.staffName} from order ${order.orderNumber}.`,
+          'success'
+        );
+        router.refresh();
+      },
+    });
   };
 
   const handleVerifyPayment = async (e: React.FormEvent) => {
@@ -588,11 +621,23 @@ export function OrderDetailClient({
                   {order.assignments.map((a) => (
                     <div
                       key={a.id}
-                      className="flex justify-between gap-2 rounded-lg bg-[#F5F1EE] px-3 py-1.5"
+                      className="flex items-center justify-between gap-2 rounded-lg bg-[#F5F1EE] px-3 py-1.5"
                     >
                       <span className="font-medium text-[#2F4156] min-w-0">{a.staffName}</span>
-                      <span className="text-[10px] font-semibold text-[#567C8D] shrink-0 whitespace-nowrap">
-                        {a.roleType}
+                      <span className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] font-semibold text-[#567C8D] whitespace-nowrap">
+                          {a.roleType}
+                        </span>
+                        {permissions.isSuperAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleUnassignStaff(a)}
+                            className="inline-flex items-center gap-1 rounded-md border border-rose-300 bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-800 hover:bg-rose-100"
+                          >
+                            <UserX className="h-3 w-3" />
+                            Unassign
+                          </button>
+                        )}
                       </span>
                     </div>
                   ))}

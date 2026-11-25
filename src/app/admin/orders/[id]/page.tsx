@@ -63,6 +63,7 @@ export default async function AdminOrderDetailPage({
           hasPermission(user, 'orders.confirm') ||
           hasPermission(user, 'delivery.update'),
         canAssign: hasPermission(user, 'orders.assign'),
+        isSuperAdmin: user.isSuperAdmin,
         canVerifyPayment: hasPermission(user, 'payments.verify'),
       }}
       staffList={staffUsers.map((s) => ({
@@ -113,6 +114,7 @@ export default async function AdminOrderDetailPage({
         })),
         assignments: order.assignments.map((a) => ({
           id: a.id,
+          staffId: a.staffId,
           staffName: a.staff.name,
           roleType: a.roleType,
           status: a.status,
