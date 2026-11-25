@@ -134,8 +134,8 @@ export function OrderDetailClient({
   const [assigning, setAssigning] = useState(false);
 
   // Assignments shown in "Current Assignments". Kept in local state so the
-  // list updates immediately after an unassign, even while the server
-  // re-render is still in flight; re-synced from props on every refresh.
+  // list updates immediately after an assign or unassign, even while the
+  // server re-render is still in flight; re-synced from props on every refresh.
   const [assignments, setAssignments] = useState(order.assignments);
   useEffect(() => {
     setAssignments(order.assignments);
@@ -199,6 +199,34 @@ export function OrderDetailClient({
       });
       if (res.ok) {
         showToast('Staff Assigned', 'Assigned order to staff member.', 'success');
+        // Optimistic add: show the new assignee in "Current Assignments"
+        // immediately, mirroring the unassign path; router.refresh() below
+        // re-syncs from the server (replacing the temporary row). The row
+        // fields match the server mapping (status 'ASSIGNED', same notes
+        // fallback). A duplicate of the same staff + role is not added twice.
+        const assignedStaff = staffList.find((st) => st.id === assignStaffId);
+        if (assignedStaff) {
+          setAssignments((prev) =>
+            prev.some(
+              (a) => a.staffId === assignStaffId && a.roleType === assignRoleType
+            )
+              ? prev
+              : [
+                  {
+                    id: `temp-${assignStaffId}-${assignRoleType}`,
+                    staffId: assignStaffId,
+                    staffName: assignedStaff.name,
+                    roleType: assignRoleType,
+                    status: 'ASSIGNED',
+                    notes:
+                      assignNotes ||
+                      `Assigned for ${assignRoleType.replace('_', ' ')}`,
+                    assignedAt: new Date().toISOString(),
+                  },
+                  ...prev,
+                ]
+          );
+        }
         setAssignNotes('');
         router.refresh();
       }
