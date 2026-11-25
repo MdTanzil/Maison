@@ -21,6 +21,7 @@ import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { DashboardCharts } from '@/components/admin/dashboard-charts';
 import { DeliveryQuickActions } from '@/components/admin/delivery-quick-actions';
+import { DashboardAutoRefresh } from '@/components/admin/dashboard-auto-refresh';
 
 export const dynamic = 'force-dynamic';
 
@@ -173,6 +174,7 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="space-y-8">
+      <DashboardAutoRefresh />
       {/* New order assignment notifications */}
       {unreadAssignmentNotifications.length > 0 && (
         <div className="rounded-2xl border border-[#567C8D]/40 bg-[#C8D9E6]/30 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
