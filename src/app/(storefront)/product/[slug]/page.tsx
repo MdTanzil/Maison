@@ -65,23 +65,23 @@ export default async function ProductDetailPage({
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-14">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-[#52606D]">
+      <nav className="flex flex-wrap items-center gap-2 text-xs text-[#52606D]">
         <Link href="/" className="hover:text-[#567C8D]">
           Home
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
+        <ChevronRight className="h-3.5 w-3.5 shrink-0" />
         <Link href="/shop" className="hover:text-[#567C8D]">
           Shop
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
+        <ChevronRight className="h-3.5 w-3.5 shrink-0" />
         <Link
           href={`/shop?category=${product.category.slug}`}
           className="hover:text-[#567C8D]"
         >
           {product.category.name}
         </Link>
-        <ChevronRight className="h-3.5 w-3.5" />
-        <span className="font-medium text-[#2F4156] truncate max-w-[220px]">
+        <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+        <span className="font-medium text-[#2F4156] truncate max-w-[160px] sm:max-w-[220px]">
           {product.title}
         </span>
       </nav>

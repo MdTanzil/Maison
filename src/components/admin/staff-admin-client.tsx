@@ -257,7 +257,7 @@ export function StaffAdminClient({
                   <tr className="border-b border-[#E8E0D9] bg-[#F5F1EE] text-[#2F4156]">
                     <th className="py-3 px-3 font-semibold">Employee / Role</th>
                     <th className="py-3 px-3 font-semibold">Assigned / Completed</th>
-                    <th className="py-3 px-3 font-semibold">Cash Collected</th>
+                    <th className="py-3 px-3 font-semibold hidden lg:table-cell">Cash Collected</th>
                     <th className="py-3 px-3 font-semibold">Status</th>
                     <th className="py-3 px-3 font-semibold text-right">Actions</th>
                   </tr>
@@ -267,14 +267,14 @@ export function StaffAdminClient({
                     <tr key={s.id} className="hover:bg-[#F5F1EE]/50">
                       <td className="py-3 px-3">
                         <p className="font-bold text-[#2F4156]">{s.name}</p>
-                        <p className="text-[11px] text-[#52606D]">
+                        <p className="text-[11px] text-[#52606D] break-all">
                           {s.employeeCode} • {s.email}
                         </p>
                         <span className="inline-block rounded bg-[#C8D9E6] px-2 py-0.5 text-[10px] font-semibold text-[#2F4156] mt-0.5">
                           {s.roleName}
                         </span>
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         <p className="font-semibold text-[#2F4156]">
                           {s.ordersCompleted} / {s.ordersAssigned} Completed
                         </p>
@@ -282,7 +282,7 @@ export function StaffAdminClient({
                           {s.ordersCancelled} Cancelled
                         </p>
                       </td>
-                      <td className="py-3 px-3 font-bold text-emerald-700">
+                      <td className="py-3 px-3 font-bold text-emerald-700 hidden lg:table-cell whitespace-nowrap">
                         {formatCurrency(s.cashCollected)}
                       </td>
                       <td className="py-3 px-3">
@@ -372,7 +372,7 @@ export function StaffAdminClient({
               placeholder="Mobile Number *"
               className="w-full rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2"
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 type="text"
                 required
@@ -403,7 +403,7 @@ export function StaffAdminClient({
                   </option>
                 ))}
             </select>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <input
                 type="text"
                 value={department}
@@ -440,8 +440,8 @@ export function StaffAdminClient({
                 key={r.id}
                 className="rounded-2xl border border-[#E8E0D9] bg-white p-5 shadow-luxury space-y-2.5"
               >
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
                     <span className="text-sm font-bold text-[#2F4156]">{r.name}</span>
                     <span className="ml-2 rounded bg-[#F5F1EE] px-2 py-0.5 font-mono text-[10px] text-[#567C8D]">
                       {r.slug}
@@ -551,28 +551,28 @@ export function StaffAdminClient({
                   <th className="py-3 px-3 font-semibold">Staff Member</th>
                   <th className="py-3 px-3 font-semibold">Role</th>
                   <th className="py-3 px-3 font-semibold">Module / Action</th>
-                  <th className="py-3 px-3 font-semibold">Target</th>
+                  <th className="py-3 px-3 font-semibold hidden lg:table-cell">Target</th>
                   <th className="py-3 px-3 font-semibold">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E8E0D9]">
                 {activityLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-[#F5F1EE]/50">
-                    <td className="py-2.5 px-3 text-[#52606D]">
+                    <td className="py-2.5 px-3 text-[#52606D] whitespace-nowrap">
                       {formatDate(log.createdAt, true)}
                     </td>
-                    <td className="py-2.5 px-3 font-bold text-[#2F4156]">
+                    <td className="py-2.5 px-3 font-bold text-[#2F4156] whitespace-nowrap">
                       {log.staffName}
                     </td>
-                    <td className="py-2.5 px-3 text-[#567C8D] font-medium">
+                    <td className="py-2.5 px-3 text-[#567C8D] font-medium whitespace-nowrap">
                       {log.roleName}
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2.5 px-3 whitespace-nowrap">
                       <span className="rounded bg-[#C8D9E6]/60 px-2 py-0.5 font-mono text-[10px] font-bold text-[#2F4156]">
                         {log.module} • {log.action}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 font-mono text-[#52606D]">
+                    <td className="py-2.5 px-3 font-mono text-[#52606D] hidden lg:table-cell whitespace-nowrap">
                       {log.targetId || '—'}
                     </td>
                     <td className="py-2.5 px-3 text-[#2F4156]">{log.description}</td>

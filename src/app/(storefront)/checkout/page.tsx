@@ -176,13 +176,13 @@ export default function CheckoutPage() {
           <div className="rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
             <div>
               <p className="text-xs text-[#52606D]">Order Number</p>
-              <p className="text-sm font-mono font-bold text-[#2F4156]">
+              <p className="text-sm font-mono font-bold text-[#2F4156] break-all">
                 {confirmedOrder.orderNumber}
               </p>
             </div>
             <div>
               <p className="text-xs text-[#52606D]">Courier Tracking ID</p>
-              <p className="text-sm font-mono font-bold text-[#567C8D]">
+              <p className="text-sm font-mono font-bold text-[#567C8D] break-all">
                 {confirmedOrder.trackingNumber}
               </p>
             </div>
@@ -419,10 +419,10 @@ export default function CheckoutPage() {
                       : 'border-[#E8E0D9] bg-white hover:border-[#567C8D]/50'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold text-[#2F4156]">{pm.title}</span>
                     <span
-                      className={`h-3.5 w-3.5 rounded-full border ${
+                      className={`h-3.5 w-3.5 shrink-0 rounded-full border ${
                         paymentMethod === pm.code
                           ? 'border-[#567C8D] bg-[#567C8D]'
                           : 'border-[#8A949E]'
@@ -474,13 +474,13 @@ export default function CheckoutPage() {
                   key={`${item.productId}-${item.variantId || 'std'}`}
                   className="py-3 flex items-center justify-between gap-3"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <img
                       src={item.imageUrl}
                       alt={item.title}
-                      className="h-12 w-10 rounded-md object-cover border border-[#E8E0D9]"
+                      className="h-12 w-10 shrink-0 rounded-md object-cover border border-[#E8E0D9]"
                     />
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-semibold text-[#2F4156] line-clamp-1">
                         {item.title}
                       </p>
@@ -489,7 +489,7 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-[#2F4156]">
+                  <span className="text-xs font-bold text-[#2F4156] shrink-0">
                     {formatCurrency(item.price * item.quantity)}
                   </span>
                 </div>

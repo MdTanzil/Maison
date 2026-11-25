@@ -116,8 +116,8 @@ export function CouponsAdminClient({
                 key={c.id}
                 className="py-3.5 flex items-center justify-between gap-4"
               >
-                <div>
-                  <div className="flex items-center gap-2">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-md bg-[#F5F1EE] border border-[#E8E0D9] px-2.5 py-1 font-mono font-bold text-[#567C8D]">
                       {c.code}
                     </span>
@@ -143,7 +143,7 @@ export function CouponsAdminClient({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() =>
@@ -211,7 +211,7 @@ export function CouponsAdminClient({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-medium text-[#2F4156] mb-1">
                 Discount Type
@@ -241,7 +241,7 @@ export function CouponsAdminClient({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-medium text-[#2F4156] mb-1">
                 Min Order Amount (৳)
@@ -266,7 +266,7 @@ export function CouponsAdminClient({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-medium text-[#2F4156] mb-1">
                 Expiry Date *

@@ -84,7 +84,7 @@ export function DeliveryQuickActions({
 
   if (currentStatus === 'DELIVERED' || currentStatus === 'RETURNED') {
     return (
-      <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-800">
+      <span className="inline-block whitespace-nowrap rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-semibold text-emerald-800">
         Completed ({currentStatus})
       </span>
     );

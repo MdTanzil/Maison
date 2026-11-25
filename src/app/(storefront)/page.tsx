@@ -112,16 +112,16 @@ export default async function HomePage() {
               </div>
 
               {/* Trust Highlights */}
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-[#E8E0D9]">
-                <div className="rounded-xl bg-white p-3.5 border border-[#E8E0D9]">
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-4 pt-6 border-t border-[#E8E0D9]">
+                <div className="rounded-xl bg-white p-3 sm:p-3.5 border border-[#E8E0D9]">
                   <p className="text-lg font-bold text-[#2F4156]">100%</p>
                   <p className="text-xs text-[#52606D]">Certified Natural Fibers</p>
                 </div>
-                <div className="rounded-xl bg-white p-3.5 border border-[#E8E0D9]">
+                <div className="rounded-xl bg-white p-3 sm:p-3.5 border border-[#E8E0D9]">
                   <p className="text-lg font-bold text-[#2F4156]">24–48h</p>
                   <p className="text-xs text-[#52606D]">Concierge Dispatch</p>
                 </div>
-                <div className="rounded-xl bg-white p-3.5 border border-[#E8E0D9]">
+                <div className="rounded-xl bg-white p-3 sm:p-3.5 border border-[#E8E0D9]">
                   <p className="text-lg font-bold text-[#2F4156]">4.9 ★</p>
                   <p className="text-xs text-[#52606D]">Verified Patron Rating</p>
                 </div>
@@ -138,8 +138,8 @@ export default async function HomePage() {
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="mt-3 flex items-center justify-between px-2 py-1">
-                  <div>
+                <div className="mt-3 flex items-center justify-between gap-3 px-2 py-1">
+                  <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-wider text-[#567C8D]">
                       Featured Look 01
                     </p>
@@ -149,7 +149,7 @@ export default async function HomePage() {
                   </div>
                   <Link
                     href="/product/siena-unstructured-belgian-linen-blazer"
-                    className="rounded-lg bg-[#F5F1EE] px-3 py-1.5 text-xs font-medium text-[#2F4156] hover:bg-[#C8D9E6] transition-colors"
+                    className="shrink-0 rounded-lg bg-[#F5F1EE] px-3 py-1.5 text-xs font-medium text-[#2F4156] hover:bg-[#C8D9E6] transition-colors"
                   >
                     View Piece
                   </Link>

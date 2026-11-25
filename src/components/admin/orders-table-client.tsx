@@ -396,7 +396,7 @@ export function OrdersTableClient({
                 <th className="py-3.5 px-3 font-semibold">Customer &amp; City</th>
                 <th className="py-3.5 px-3 font-semibold">Amount / Payment</th>
                 <th className="py-3.5 px-3 font-semibold">Order Status</th>
-                <th className="py-3.5 px-3 font-semibold">Assigned Staff</th>
+                <th className="py-3.5 px-3 font-semibold hidden lg:table-cell">Assigned Staff</th>
                 <th className="py-3.5 px-4 font-semibold text-right">
                   Actions &amp; Direct Print
                 </th>
@@ -426,7 +426,7 @@ export function OrdersTableClient({
                       </button>
                     </td>
 
-                    <td className="py-3.5 px-3">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       <Link
                         href={`/admin/orders/${o.id}`}
                         className="font-mono font-bold text-[#567C8D] hover:underline"
@@ -445,7 +445,7 @@ export function OrdersTableClient({
                       </p>
                     </td>
 
-                    <td className="py-3.5 px-3">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       <p className="font-bold text-[#2F4156]">
                         {formatCurrency(o.grandTotal)}
                       </p>
@@ -486,7 +486,7 @@ export function OrdersTableClient({
                       )}
                     </td>
 
-                    <td className="py-3.5 px-3">
+                    <td className="py-3.5 px-3 hidden lg:table-cell">
                       <div className="space-y-1">
                         {o.assignedStaff.slice(0, 2).map((st, idx) => (
                           <span
@@ -513,7 +513,7 @@ export function OrdersTableClient({
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
                       <div className="inline-flex items-center gap-1.5">
                         <Link
                           href={`/admin/orders/${o.id}`}

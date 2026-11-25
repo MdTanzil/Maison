@@ -139,7 +139,7 @@ export function InventoryAdminClient({
                       </td>
                       <td className="py-3 px-3 text-[#52606D]">{p.reservedStock}</td>
                       <td className="py-3 px-3 text-[#52606D]">{p.lowStockThreshold}</td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         {p.stockQuantity <= 0 ? (
                           <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[11px] font-bold text-rose-800">
                             Out of Stock
@@ -286,13 +286,13 @@ export function InventoryAdminClient({
                 <th className="py-3 px-3 font-semibold">Qty</th>
                 <th className="py-3 px-3 font-semibold">Stock Change</th>
                 <th className="py-3 px-3 font-semibold">Reason / Reference</th>
-                <th className="py-3 px-3 font-semibold">Performed By</th>
+                <th className="py-3 px-3 font-semibold hidden lg:table-cell">Performed By</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E8E0D9]">
               {transactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-[#F5F1EE]/50">
-                  <td className="py-2.5 px-3 text-[#52606D]">
+                  <td className="py-2.5 px-3 text-[#52606D] whitespace-nowrap">
                     {formatDate(tx.createdAt, true)}
                   </td>
                   <td className="py-2.5 px-3">
@@ -301,13 +301,13 @@ export function InventoryAdminClient({
                       {tx.sku}
                     </span>
                   </td>
-                  <td className="py-2.5 px-3">
+                  <td className="py-2.5 px-3 whitespace-nowrap">
                     <span className="rounded-md bg-[#C8D9E6]/60 px-2 py-0.5 text-[10px] font-bold text-[#2F4156]">
                       {tx.type}
                     </span>
                   </td>
                   <td className="py-2.5 px-3 font-bold text-[#2F4156]">{tx.quantity}</td>
-                  <td className="py-2.5 px-3 font-mono text-[#52606D]">
+                  <td className="py-2.5 px-3 font-mono text-[#52606D] whitespace-nowrap">
                     {tx.previousStock} →{' '}
                     <strong className="text-[#2F4156]">{tx.newStock}</strong>
                   </td>
@@ -315,7 +315,7 @@ export function InventoryAdminClient({
                     {tx.reason}{' '}
                     {tx.referenceId ? `(${tx.referenceId})` : ''}
                   </td>
-                  <td className="py-2.5 px-3 font-medium text-[#2F4156]">
+                  <td className="py-2.5 px-3 font-medium text-[#2F4156] hidden lg:table-cell whitespace-nowrap">
                     {tx.performedByName}
                   </td>
                 </tr>

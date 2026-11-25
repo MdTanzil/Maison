@@ -478,10 +478,10 @@ export function ProductsAdminClient({
                   </button>
                 </th>
                 <th className="py-3.5 px-3 font-semibold">Piece / SKU</th>
-                <th className="py-3.5 px-3 font-semibold">Department</th>
+                <th className="py-3.5 px-3 font-semibold hidden lg:table-cell">Department</th>
                 <th className="py-3.5 px-3 font-semibold">Regular / Sale Price</th>
                 {canViewCost && (
-                  <th className="py-3.5 px-3 font-semibold">Cost Price</th>
+                  <th className="py-3.5 px-3 font-semibold hidden xl:table-cell">Cost Price</th>
                 )}
                 <th className="py-3.5 px-3 font-semibold">Stock</th>
                 <th className="py-3.5 px-3 font-semibold">Status</th>
@@ -519,9 +519,9 @@ export function ProductsAdminClient({
                         <img
                           src={p.imageUrl}
                           alt={p.title}
-                          className="h-12 w-10 rounded-lg object-cover border border-[#E8E0D9]"
+                          className="h-12 w-10 shrink-0 rounded-lg object-cover border border-[#E8E0D9]"
                         />
-                        <div>
+                        <div className="min-w-0">
                           <p className="font-semibold text-[#2F4156]">{p.title}</p>
                           <p className="font-mono text-[11px] text-[#567C8D]">
                             SKU: {p.sku} • {p.variantCount} Variants
@@ -530,12 +530,12 @@ export function ProductsAdminClient({
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-3">
+                    <td className="py-3.5 px-3 hidden lg:table-cell">
                       <p className="font-medium text-[#2F4156]">{p.categoryName}</p>
                       <p className="text-[11px] text-[#52606D]">{p.brandName}</p>
                     </td>
 
-                    <td className="py-3.5 px-3">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       <p className="font-bold text-[#2F4156]">
                         {formatCurrency(p.salePrice ?? p.regularPrice)}
                       </p>
@@ -547,12 +547,12 @@ export function ProductsAdminClient({
                     </td>
 
                     {canViewCost && (
-                      <td className="py-3.5 px-3 font-medium text-[#52606D]">
+                      <td className="py-3.5 px-3 font-medium text-[#52606D] hidden xl:table-cell whitespace-nowrap">
                         {formatCurrency(p.costPrice)}
                       </td>
                     )}
 
-                    <td className="py-3.5 px-3">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold ${
                           isLow

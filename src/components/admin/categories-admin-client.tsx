@@ -183,8 +183,8 @@ export function CategoriesAdminClient({
                   key={c.id}
                   className="py-3 flex items-center justify-between gap-4"
                 >
-                  <div>
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-bold text-[#2F4156]">{c.name}</span>
                       {c.parentName && (
                         <span className="rounded bg-[#C8D9E6] px-2 py-0.5 text-[10px] font-semibold text-[#2F4156]">
@@ -208,7 +208,7 @@ export function CategoriesAdminClient({
                         onConfirm: () => handleDeleteCategory(c.id),
                       })
                     }
-                    className="text-[#8A949E] hover:text-rose-600 p-1.5"
+                    className="text-[#8A949E] hover:text-rose-600 p-1.5 shrink-0"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -223,12 +223,12 @@ export function CategoriesAdminClient({
             </h2>
             <div className="divide-y divide-[#E8E0D9] text-xs">
               {brandRows.map((b) => (
-                <div key={b.id} className="py-3 flex items-center justify-between">
-                  <div>
+                <div key={b.id} className="py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="font-bold text-[#2F4156]">{b.name}</p>
                     <p className="text-[#52606D]">{b.description}</p>
                   </div>
-                  <span className="rounded-full bg-[#F5F1EE] px-2.5 py-1 font-semibold text-[#567C8D]">
+                  <span className="rounded-full bg-[#F5F1EE] px-2.5 py-1 font-semibold text-[#567C8D] shrink-0 whitespace-nowrap">
                     {b.productCount} pieces
                   </span>
                 </div>

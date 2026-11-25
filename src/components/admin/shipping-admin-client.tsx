@@ -139,13 +139,13 @@ export function ShippingAdminClient({
           {shippingMethods.map((m) => (
             <div
               key={m.id}
-              className="flex items-center justify-between rounded-xl bg-[#F5F1EE] px-3.5 py-2 border border-[#E8E0D9]"
+              className="flex items-center justify-between gap-3 rounded-xl bg-[#F5F1EE] px-3.5 py-2 border border-[#E8E0D9]"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="font-semibold text-[#2F4156]">{m.name}</p>
                 <p className="text-[10px] text-[#52606D]">{m.estimatedDays}</p>
               </div>
-              <span className="font-bold text-[#567C8D]">
+              <span className="font-bold text-[#567C8D] shrink-0 whitespace-nowrap">
                 {formatCurrency(m.charge)}
               </span>
             </div>
@@ -173,7 +173,7 @@ export function ShippingAdminClient({
             <tbody className="divide-y divide-[#E8E0D9]">
               {shipments.map((s) => (
                 <tr key={s.id} className="hover:bg-[#F5F1EE]/50">
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-3 whitespace-nowrap">
                     <Link
                       href={`/admin/orders/${s.orderId}`}
                       className="font-mono font-bold text-[#567C8D] hover:underline"
@@ -184,7 +184,7 @@ export function ShippingAdminClient({
                       {s.trackingNumber}
                     </p>
                   </td>
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-3 max-w-[240px]">
                     <p className="font-semibold text-[#2F4156]">{s.recipientName}</p>
                     <p className="text-[11px] text-[#52606D]">
                       {s.recipientPhone} • {s.deliveryAddress}
@@ -249,7 +249,7 @@ export function ShippingAdminClient({
                       </span>
                     )}
                   </td>
-                  <td className="py-3 px-3">
+                  <td className="py-3 px-3 whitespace-nowrap">
                     <p className="font-bold text-[#2F4156]">
                       Due: {formatCurrency(s.codAmount)}
                     </p>

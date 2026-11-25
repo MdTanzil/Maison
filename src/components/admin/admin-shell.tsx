@@ -148,16 +148,27 @@ export function AdminShell({
 
   return (
     <div className="min-h-screen bg-[#F5F1EE] text-[#1F2933] flex">
+      {/* Backdrop — lets the mobile sidebar be dismissed by tapping outside it */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          onClick={() => setSidebarOpen(false)}
+          className="no-print fixed inset-0 z-30 bg-black/40 lg:hidden"
+        />
+      )}
       {/* Sidebar — White & Warm Beige Luxury Surface (No Navy background!) */}
       <aside
         className={`admin-sidebar no-print fixed inset-y-0 left-0 z-40 flex flex-col border-r border-[#E8E0D9] bg-white transition-all duration-300 lg:static ${
-          collapsed ? 'w-20' : 'w-64'
+          collapsed ? 'w-64 lg:w-20' : 'w-64'
         } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Brand Header */}
         <div className="flex h-20 items-center justify-between border-b border-[#E8E0D9] px-5">
-          {!collapsed && (
-            <Link href="/admin" className="flex flex-col">
+          <Link
+            href="/admin"
+            className={`flex flex-col ${collapsed ? 'lg:hidden' : ''}`}
+          >
               <span className="font-serif text-lg font-bold tracking-[0.16em] text-[#2F4156]">
                 {storeName}
               </span>
@@ -165,7 +176,6 @@ export function AdminShell({
                 Atelier Console
               </span>
             </Link>
-          )}
           <button
             type="button"
             onClick={() => {
@@ -183,15 +193,17 @@ export function AdminShell({
         </div>
 
         {/* Active Role Pill */}
-        {!collapsed && (
-          <div className="mx-4 mt-4 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] p-3">
+        <div
+          className={`mx-4 mt-4 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] p-3 ${
+            collapsed ? 'lg:hidden' : ''
+          }`}
+        >
             <div className="flex items-center gap-2 text-xs font-bold text-[#2F4156]">
               <Shield className="h-3.5 w-3.5 text-[#567C8D]" />
               <span className="truncate">{user.roleNames[0] || 'Staff'}</span>
             </div>
             <p className="text-[11px] text-[#52606D] truncate mt-0.5">{user.email}</p>
           </div>
-        )}
 
         {/* Navigation Links */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
@@ -219,7 +231,7 @@ export function AdminShell({
                 ) : (
                   <Icon className="h-4 w-4 shrink-0" />
                 )}
-                {!collapsed && <span>{item.label}</span>}
+                <span className={collapsed ? 'lg:hidden' : ''}>{item.label}</span>
               </Link>
             );
           })}
@@ -232,7 +244,7 @@ export function AdminShell({
             className="flex items-center gap-3 rounded-xl bg-[#F5F1EE] px-3.5 py-2.5 text-xs font-medium text-[#2F4156] hover:bg-[#C8D9E6]/60 transition-colors"
           >
             <ExternalLink className="h-4 w-4 text-[#567C8D] shrink-0" />
-            {!collapsed && <span>View Live Storefront</span>}
+            <span className={collapsed ? 'lg:hidden' : ''}>View Live Storefront</span>
           </Link>
           <button
             type="button"
@@ -245,7 +257,9 @@ export function AdminShell({
             ) : (
               <LogOut className="h-4 w-4 shrink-0" />
             )}
-            {!collapsed && <span>{signingOut ? 'Signing out...' : 'Sign Out'}</span>}
+            <span className={collapsed ? 'lg:hidden' : ''}>
+              {signingOut ? 'Signing out...' : 'Sign Out'}
+            </span>
           </button>
         </div>
       </aside>
@@ -264,14 +278,14 @@ export function AdminShell({
             </button>
 
             {/* Breadcrumbs */}
-            <nav className="breadcrumb-nav hidden sm:flex items-center gap-1.5 text-xs text-[#52606D]">
+            <nav className="breadcrumb-nav hidden sm:flex items-center gap-1.5 text-xs text-[#52606D] min-w-0">
               <Link href="/admin" className="hover:text-[#567C8D] font-medium">
                 Console
               </Link>
               {pathSegments.slice(1).map((seg, i) => (
                 <React.Fragment key={i}>
                   <ChevronRight className="h-3.5 w-3.5" />
-                  <span className="capitalize font-semibold text-[#2F4156]">
+                  <span className="capitalize font-semibold text-[#2F4156] truncate">
                     {seg.replace(/-/g, ' ')}
                   </span>
                 </React.Fragment>
@@ -282,7 +296,7 @@ export function AdminShell({
           {/* Global Order/Customer Quick Search */}
           <form
             onSubmit={handleQuickOrderSearch}
-            className="hidden md:flex flex-1 max-w-md mx-4"
+            className="hidden md:flex flex-1 min-w-0 max-w-md mx-4"
           >
             <input
               type="text"
@@ -312,11 +326,11 @@ export function AdminShell({
               <div className="h-7 w-7 rounded-full bg-[#567C8D] text-white flex items-center justify-center text-xs font-bold">
                 {user.name.charAt(0)}
               </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-xs font-semibold text-[#2F4156] leading-tight">
+              <div className="hidden sm:block text-left min-w-0">
+                <p className="text-xs font-semibold text-[#2F4156] leading-tight truncate max-w-[160px]">
                   {user.name}
                 </p>
-                <p className="text-[10px] text-[#567C8D] font-medium">
+                <p className="text-[10px] text-[#567C8D] font-medium truncate max-w-[160px]">
                   {user.roleNames.join(', ')}
                 </p>
               </div>

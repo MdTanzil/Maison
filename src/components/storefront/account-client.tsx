@@ -180,19 +180,19 @@ export function CustomerAccountClient({
         </div>
 
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <div className="rounded-xl bg-[#F5F1EE] p-3.5 border border-[#E8E0D9] text-center">
+          <div className="rounded-xl bg-[#F5F1EE] p-3.5 border border-[#E8E0D9] text-center min-w-0">
             <p className="text-xs text-[#52606D]">Total Orders</p>
-            <p className="text-lg font-bold text-[#2F4156] mt-0.5">{user.totalOrders}</p>
+            <p className="text-lg font-bold text-[#2F4156] mt-0.5 break-words">{user.totalOrders}</p>
           </div>
-          <div className="rounded-xl bg-[#F5F1EE] p-3.5 border border-[#E8E0D9] text-center">
+          <div className="rounded-xl bg-[#F5F1EE] p-3.5 border border-[#E8E0D9] text-center min-w-0">
             <p className="text-xs text-[#52606D]">Lifetime Spent</p>
-            <p className="text-lg font-bold text-[#2F4156] mt-0.5">
+            <p className="text-lg font-bold text-[#2F4156] mt-0.5 break-words">
               {formatCurrency(user.totalSpent)}
             </p>
           </div>
-          <div className="rounded-xl bg-[#C8D9E6]/60 p-3.5 border border-[#E8E0D9] text-center">
+          <div className="rounded-xl bg-[#C8D9E6]/60 p-3.5 border border-[#E8E0D9] text-center min-w-0">
             <p className="text-xs text-[#2F4156]">Privilege Points</p>
-            <p className="text-lg font-bold text-[#2F4156] mt-0.5">{user.loyaltyPoints}</p>
+            <p className="text-lg font-bold text-[#2F4156] mt-0.5 break-words">{user.loyaltyPoints}</p>
           </div>
         </div>
       </div>
@@ -322,9 +322,9 @@ export function CustomerAccountClient({
                   {order.items.map((item) => (
                     <div
                       key={item.id}
-                      className="py-2 flex items-center justify-between text-xs"
+                      className="py-2 flex items-center justify-between gap-3 text-xs"
                     >
-                      <div>
+                      <div className="min-w-0">
                         <span className="font-semibold text-[#2F4156]">
                           {item.productName}
                         </span>
@@ -335,7 +335,7 @@ export function CustomerAccountClient({
                         )}
                         <span className="text-[#52606D] ml-2">× {item.quantity}</span>
                       </div>
-                      <span className="font-semibold text-[#2F4156]">
+                      <span className="font-semibold text-[#2F4156] shrink-0">
                         {formatCurrency(item.totalPrice)}
                       </span>
                     </div>
@@ -362,9 +362,9 @@ export function CustomerAccountClient({
             {addresses.map((addr) => (
               <div
                 key={addr.id}
-                className="rounded-xl border border-[#E8E0D9] bg-white p-5 shadow-luxury flex items-start justify-between"
+                className="rounded-xl border border-[#E8E0D9] bg-white p-5 shadow-luxury flex items-start justify-between gap-3"
               >
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold text-[#2F4156]">{addr.label}</span>
                     {addr.isDefault && (
@@ -392,7 +392,7 @@ export function CustomerAccountClient({
                       onConfirm: () => handleDeleteAddress(addr.id),
                     })
                   }
-                  className="text-[#8A949E] hover:text-rose-600 p-1.5"
+                  className="text-[#8A949E] hover:text-rose-600 p-1.5 shrink-0"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

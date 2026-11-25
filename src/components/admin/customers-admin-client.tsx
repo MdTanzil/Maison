@@ -141,7 +141,7 @@ export function CustomersAdminClient({
             <thead>
               <tr className="border-b border-[#E8E0D9] bg-[#F5F1EE] text-[#2F4156]">
                 <th className="py-3.5 px-4 font-semibold">Patron / Contact</th>
-                <th className="py-3.5 px-3 font-semibold">Primary Address</th>
+                <th className="py-3.5 px-3 font-semibold hidden lg:table-cell">Primary Address</th>
                 <th className="py-3.5 px-3 font-semibold">Orders / Lifetime Spend</th>
                 <th className="py-3.5 px-3 font-semibold">Internal CRM Notes</th>
                 <th className="py-3.5 px-3 font-semibold">Status</th>
@@ -155,13 +155,13 @@ export function CustomersAdminClient({
                 <tr key={c.id} className="hover:bg-[#F5F1EE]/50">
                   <td className="py-3.5 px-4">
                     <p className="font-bold text-[#2F4156]">{c.name}</p>
-                    <p className="text-[#52606D]">{c.email}</p>
-                    <p className="text-[11px] font-mono text-[#567C8D]">{c.phone}</p>
+                    <p className="text-[#52606D] break-all">{c.email}</p>
+                    <p className="text-[11px] font-mono text-[#567C8D] whitespace-nowrap">{c.phone}</p>
                   </td>
-                  <td className="py-3.5 px-3 text-[#52606D] max-w-[200px]">
+                  <td className="py-3.5 px-3 text-[#52606D] max-w-[200px] hidden lg:table-cell">
                     {c.defaultAddress}
                   </td>
-                  <td className="py-3.5 px-3">
+                  <td className="py-3.5 px-3 whitespace-nowrap">
                     <p className="font-bold text-[#2F4156]">
                       {formatCurrency(c.totalSpent)}
                     </p>

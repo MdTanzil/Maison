@@ -160,10 +160,10 @@ export function ReportsAdminClient({
                       <p className="font-semibold text-[#2F4156]">{p.title}</p>
                       <p className="font-mono text-[10px] text-[#567C8D]">{p.sku}</p>
                     </td>
-                    <td className="py-3 px-3 text-[#52606D]">{p.categoryName}</td>
-                    <td className="py-3 px-3 font-bold text-[#2F4156]">{p.soldCount}</td>
-                    <td className="py-3 px-3 text-[#52606D]">{p.stockQuantity}</td>
-                    <td className="py-3 px-3 text-right font-bold text-[#567C8D]">
+                    <td className="py-3 px-3 text-[#52606D] whitespace-nowrap">{p.categoryName}</td>
+                    <td className="py-3 px-3 font-bold text-[#2F4156] whitespace-nowrap">{p.soldCount}</td>
+                    <td className="py-3 px-3 text-[#52606D] whitespace-nowrap">{p.stockQuantity}</td>
+                    <td className="py-3 px-3 text-right font-bold text-[#567C8D] whitespace-nowrap">
                       {formatCurrency(p.revenue)}
                     </td>
                   </tr>

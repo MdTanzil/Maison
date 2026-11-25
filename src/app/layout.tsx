@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { StoreProvider } from '@/components/storefront/store-provider';
 import { getCurrentUser } from '@/lib/auth/session';
@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   title: 'MAISON BEIGE | Luxury Fashion, Fine Leather & Living Sanctuary',
   description:
     'Beige-led luxury essentials, unstructured Belgian linen tailoring, full-grain calfskin bags, and artisanal home vessels.',
+};
+
+// Explicit viewport: without this, mobile browsers fall back to rendering at
+// desktop width. (Next.js also supplies these same values by default; the
+// explicit export locks the behaviour in and makes it auditable in source.)
+// Trigger commit 25 Nov 2026: re-run the preview build after the Vercel daily deployment limit reset.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default async function RootLayout({
