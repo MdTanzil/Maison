@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Activity,
+  Bell,
 } from 'lucide-react';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
@@ -61,6 +62,7 @@ export default async function AdminDashboardPage({
     recentLogs,
     assignedToMe,
     myShipments,
+    unreadAssignmentNotifications,
   ] = await Promise.all([
     prisma.order.findMany({
       where: startDate ? { createdAt: { gte: startDate } } : undefined,
@@ -105,6 +107,10 @@ export default async function AdminDashboardPage({
       include: { order: true, deliveryStaff: true },
       orderBy: { createdAt: 'desc' },
       take: 10,
+    }),
+    prisma.notification.findMany({
+      where: { userId: user.id, type: 'ORDER_ASSIGNED', isRead: false },
+      orderBy: { createdAt: 'desc' },
     }),
   ]);
 
@@ -167,6 +173,29 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="space-y-8">
+      {/* New order assignment notifications */}
+      {unreadAssignmentNotifications.length > 0 && (
+        <div className="rounded-2xl border border-[#567C8D]/40 bg-[#C8D9E6]/30 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5 shrink-0 text-[#567C8D]" />
+            <p className="text-sm font-semibold text-[#2F4156]">
+              You have {unreadAssignmentNotifications.length} new order
+              assignment{unreadAssignmentNotifications.length > 1 ? 's' : ''}
+            </p>
+          </div>
+          <p className="text-xs text-[#52606D] flex-1 leading-relaxed">
+            {unreadAssignmentNotifications[0].message}
+          </p>
+          <Link
+            href="/admin/orders"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[#567C8D] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#486878] shrink-0"
+          >
+            View orders
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      )}
+
       {/* Top Welcome & Date Range Filter Bar */}
       <div className="rounded-2xl border border-[#E8E0D9] bg-white p-6 shadow-luxury flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
