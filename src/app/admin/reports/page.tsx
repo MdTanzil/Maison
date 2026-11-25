@@ -1,11 +1,17 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { ReportsAdminClient } from '@/components/admin/reports-admin-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminReportsPage() {
   await ensureDatabaseReady();
+  const user = await getCurrentUser();
+  if (!user || !hasPermission(user, 'reports.view')) {
+    redirect('/admin');
+  }
 
   const [orders, products, categories, refunds] = await Promise.all([
     prisma.order.findMany({

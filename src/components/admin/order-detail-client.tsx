@@ -34,6 +34,7 @@ export function OrderDetailClient({
   order,
   staffList,
   permissions,
+  allowedStatuses,
 }: {
   order: {
     id: string;
@@ -103,6 +104,7 @@ export function OrderDetailClient({
     canAssign: boolean;
     canVerifyPayment: boolean;
   };
+  allowedStatuses: OrderStatus[];
 }) {
   const router = useRouter();
   const { showToast } = useStore();
@@ -437,17 +439,7 @@ export function OrderDetailClient({
                   onChange={(e) => setStatus(e.target.value as OrderStatus)}
                   className="w-full rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2.5 text-xs font-semibold text-[#2F4156]"
                 >
-                  {[
-                    'PENDING',
-                    'CONFIRMED',
-                    'PROCESSING',
-                    'READY_FOR_SHIPMENT',
-                    'SHIPPED',
-                    'DELIVERED',
-                    'CANCELLED',
-                    'RETURNED',
-                    'REFUNDED',
-                  ].map((s) => (
+                  {Array.from(new Set([order.status, ...allowedStatuses])).map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>

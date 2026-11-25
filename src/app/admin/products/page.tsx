@@ -1,5 +1,6 @@
 import React from 'react';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { redirect } from 'next/navigation';
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { ProductsAdminClient } from '@/components/admin/products-admin-client';
 
@@ -8,6 +9,9 @@ export const dynamic = 'force-dynamic';
 export default async function AdminProductsPage() {
   await ensureDatabaseReady();
   const user = (await getCurrentUser())!;
+  if (!user || !hasPermission(user, 'products.view')) {
+    redirect('/admin');
+  }
 
   const [products, categories, brands] = await Promise.all([
     prisma.product.findMany({

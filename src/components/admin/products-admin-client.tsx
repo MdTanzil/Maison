@@ -9,6 +9,7 @@ import {
   Download,
   Upload,
   Edit3,
+  Trash2,
   CheckSquare,
   Square,
   AlertTriangle,
@@ -276,6 +277,28 @@ export function ProductsAdminClient({
           router.refresh();
         } else {
           showToast('Bulk Error', res.error, 'error');
+        }
+      },
+    });
+  };
+
+  const handleDeleteProduct = (p: AdminProductRow) => {
+    setConfirm({
+      title: 'Delete Product',
+      message: `Permanently delete "${p.title}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: async () => {
+        const res = await bulkProductOperationAction({
+          productIds: [p.id],
+          operation: 'DELETE',
+        });
+        if (res.ok) {
+          showToast('Product Deleted', `"${p.title}" was permanently deleted.`, 'success');
+          setSelectedIds((prev) => prev.filter((x) => x !== p.id));
+          router.refresh();
+        } else {
+          showToast('Delete Failed', res.error, 'error');
         }
       },
     });
@@ -578,16 +601,28 @@ export function ProductsAdminClient({
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(p)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-1.5 text-xs font-semibold text-[#2F4156] hover:border-[#567C8D]"
-                        >
-                          <Edit3 className="h-3.5 w-3.5 text-[#567C8D]" />
-                          <span>Edit</span>
-                        </button>
-                      )}
+                      <div className="inline-flex items-center gap-1.5">
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(p)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3 py-1.5 text-xs font-semibold text-[#2F4156] hover:border-[#567C8D]"
+                          >
+                            <Edit3 className="h-3.5 w-3.5 text-[#567C8D]" />
+                            <span>Edit</span>
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteProduct(p)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 hover:bg-rose-100"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

@@ -1,6 +1,9 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
+import type { OrderStatus } from '@prisma/client';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
-import { getCurrentUser } from '@/lib/auth/session';
+import { getCurrentUser, hasPermission } from '@/lib/auth/session';
+import { getAllowedTargetStatuses } from '@/lib/orders/status-rules';
 import { OrdersTableClient } from '@/components/admin/orders-table-client';
 
 export const dynamic = 'force-dynamic';
@@ -12,10 +15,24 @@ export default async function AdminOrdersPage({
 }) {
   await ensureDatabaseReady();
   const user = (await getCurrentUser())!;
+  if (!user || !hasPermission(user, 'orders.view')) {
+    redirect('/admin');
+  }
   const sp = await searchParams;
+
+  const isDeliveryOnly =
+    user.roles.includes('DELIVERY_STAFF') && !user.isSuperAdmin && !hasPermission(user, 'reports.view');
 
   const [orders, staffUsers] = await Promise.all([
     prisma.order.findMany({
+      where: isDeliveryOnly
+        ? {
+            OR: [
+              { assignments: { some: { staffId: user.id } } },
+              { shipment: { deliveryStaffId: user.id } },
+            ],
+          }
+        : undefined,
       include: {
         items: true,
         shipment: true,
@@ -40,8 +57,24 @@ export default async function AdminOrdersPage({
       canUpdateStatus={
         user.isSuperAdmin ||
         user.permissions.includes('orders.update_status') ||
-        user.permissions.includes('orders.confirm')
+        user.permissions.includes('orders.confirm') ||
+        user.permissions.includes('delivery.update')
       }
+      canCancel={hasPermission(user, 'orders.cancel')}
+      allowedStatusesByOrder={orders.reduce(
+        (acc, o) => {
+          const isAssigned =
+            o.assignments.some((a) => a.staffId === user.id) ||
+            o.shipment?.deliveryStaffId === user.id;
+          acc[o.id] = getAllowedTargetStatuses(o.status, {
+            permissions: user.permissions,
+            isSuperAdmin: user.isSuperAdmin,
+            isAssigned,
+          });
+          return acc;
+        },
+        {} as Record<string, OrderStatus[]>
+      )}
       canDeleteOrder={user.isSuperAdmin}
       staffList={staffUsers.map((s) => ({
         id: s.id,

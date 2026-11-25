@@ -41,6 +41,9 @@ export function ReportsAdminClient({
     stock: number;
   }>;
 }) {
+  const hasCategoryData = categoryPerformance.some(
+    (c) => c.sold !== 0 || c.stock !== 0
+  );
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-[#E8E0D9] bg-white p-6 shadow-luxury flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -125,16 +128,22 @@ export function ReportsAdminClient({
             Units Sold vs Stock by Category
           </h2>
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryPerformance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E8E0D9" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#52606D' }} />
-                <YAxis tick={{ fontSize: 11, fill: '#52606D' }} />
-                <Tooltip />
-                <Bar dataKey="sold" fill="#567C8D" name="Units Sold" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="stock" fill="#C8D9E6" name="In Stock" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {hasCategoryData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoryPerformance}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E8E0D9" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#52606D' }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#52606D' }} />
+                  <Tooltip />
+                  <Bar dataKey="sold" fill="#567C8D" name="Units Sold" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                  <Bar dataKey="stock" fill="#C8D9E6" name="In Stock" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-xs text-[#52606D]">No category sales data yet.</p>
+              </div>
+            )}
           </div>
         </div>
 

@@ -18,8 +18,13 @@ export default async function SingleOrderPrintPage({
   const sp = await searchParams;
   const initialFormat = sp.format === '80mm' ? '80mm' : 'a4';
 
-  const [user, order, settings] = await Promise.all([
-    getCurrentUser(),
+  // Staff-only: customers print their own invoice via /account/orders/[id]/print.
+  const user = await getCurrentUser();
+  if (!user || !user.isStaff || !hasPermission(user, 'orders.print_memo')) {
+    redirect('/admin');
+  }
+
+  const [order, settings] = await Promise.all([
     prisma.order.findUnique({
       where: { id },
       include: { items: true, shipment: true },
@@ -31,22 +36,10 @@ export default async function SingleOrderPrintPage({
     notFound();
   }
 
-  // Protect against unauthorized access: allow staff with orders.print_memo / orders.view OR the customer who placed the order
-  if (user) {
-    const isOwner = order.customerId === user.id || order.customerEmail === user.email;
-    const isAuthorizedStaff =
-      user.isStaff &&
-      (hasPermission(user, 'orders.print_memo') || hasPermission(user, 'orders.view'));
-
-    if (!isOwner && !isAuthorizedStaff) {
-      redirect('/auth/login');
-    }
-  }
-
   return (
     <InvoicePrintView
       initialFormat={initialFormat}
-      backHref={user?.isStaff ? `/admin/orders/${order.id}` : '/account'}
+      backHref={`/admin/orders/${order.id}`}
       store={{
         storeName: settings?.storeName || 'MAISON BEIGE',
         tagline: settings?.tagline || 'Quiet Luxury & Timeless Essentials',

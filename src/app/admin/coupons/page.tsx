@@ -1,11 +1,17 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { CouponsAdminClient } from '@/components/admin/coupons-admin-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminCouponsPage() {
   await ensureDatabaseReady();
+  const user = await getCurrentUser();
+  if (!user || !hasPermission(user, 'coupons.manage')) {
+    redirect('/admin');
+  }
   const coupons = await prisma.coupon.findMany({
     orderBy: { createdAt: 'desc' },
   });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { redirect } from 'next/navigation';
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { SettingsAdminClient } from '@/components/admin/settings-admin-client';
 import { CredentialsAdminClient } from '@/components/admin/credentials-admin-client';
@@ -8,10 +9,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminSettingsPage() {
   await ensureDatabaseReady();
+  const sessionUser = await getCurrentUser();
+  if (!sessionUser || !hasPermission(sessionUser, 'settings.manage')) {
+    redirect('/admin');
+  }
   const settings = await prisma.websiteSettings.findUnique({
     where: { id: 'default' },
   });
-  const sessionUser = await getCurrentUser();
   const canManageCredentials = hasPermission(sessionUser, 'settings.manage');
   const paymentJson = (settings?.paymentSettingsJson ?? {}) as Record<string, any>;
   const creds = (paymentJson.credentials ?? {}) as Record<string, any>;

@@ -244,6 +244,15 @@ export async function bulkProductOperationAction(params: {
 
   if (params.operation === 'DELETE') {
     await requirePermission('products.delete');
+    const orderedCount = await prisma.orderItem.count({
+      where: { productId: { in: params.productIds } },
+    });
+    if (orderedCount > 0) {
+      return {
+        ok: false,
+        error: `Cannot delete: ${orderedCount} order record(s) reference these products. Archive them instead.`,
+      };
+    }
     await prisma.product.deleteMany({
       where: { id: { in: params.productIds } },
     });
@@ -671,11 +680,13 @@ export async function submitProductReviewAction(data: {
   rating: number;
   title?: string;
   comment: string;
-  customerName?: string;
 }) {
   await ensureDatabaseReady();
   const sessionUser = await getCurrentUser().catch(() => null);
-  const name = sessionUser?.name || data.customerName?.trim() || 'Verified Patron';
+  if (!sessionUser) {
+    return { ok: false, error: 'Please sign in to write a review.' };
+  }
+  const name = sessionUser.name;
 
   if (!data.comment || data.comment.trim().length < 5) {
     return { ok: false, error: 'Please write a brief review of at least 5 characters.' };
@@ -683,18 +694,45 @@ export async function submitProductReviewAction(data: {
 
   const rating = Math.min(5, Math.max(1, Number(data.rating) || 5));
 
-  await prisma.review.create({
-    data: {
-      productId: data.productId,
-      userId: sessionUser?.id ?? null,
-      customerName: name,
-      rating,
-      title: data.title?.trim() || 'Verified Purchase Review',
-      comment: data.comment.trim(),
-      isVerifiedPurchase: true,
-      isApproved: true,
+  const hasLiveOrder = await prisma.order.findFirst({
+    where: {
+      OR: [{ customerId: sessionUser.id }, { customerEmail: sessionUser.email }],
+      status: { notIn: ['CANCELLED', 'REFUNDED', 'RETURNED'] },
+      items: { some: { productId: data.productId } },
     },
+    select: { id: true },
   });
+  const isVerifiedPurchase = !!hasLiveOrder;
+
+  // One review per user per product: update the existing review if present.
+  const existing = await prisma.review.findFirst({
+    where: { userId: sessionUser.id, productId: data.productId },
+  });
+
+  if (existing) {
+    await prisma.review.update({
+      where: { id: existing.id },
+      data: {
+        rating,
+        title: data.title?.trim() || 'Customer Review',
+        comment: data.comment.trim(),
+        isVerifiedPurchase,
+      },
+    });
+  } else {
+    await prisma.review.create({
+      data: {
+        productId: data.productId,
+        userId: sessionUser.id,
+        customerName: name,
+        rating,
+        title: data.title?.trim() || 'Customer Review',
+        comment: data.comment.trim(),
+        isVerifiedPurchase,
+        isApproved: true,
+      },
+    });
+  }
 
   const allReviews = await prisma.review.findMany({
     where: { productId: data.productId, isApproved: true },

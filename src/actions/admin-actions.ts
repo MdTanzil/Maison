@@ -8,7 +8,8 @@ import { couponSchema, staffSchema } from '@/lib/validations/schemas';
 import { slugify } from '@/lib/utils';
 import { logStaffActivity } from '@/lib/services/audit';
 import { encryptSecret } from '@/lib/services/credentials';
-import { CourierProvider } from '@prisma/client';
+import { CourierProvider, OrderStatus } from '@prisma/client';
+import { applyOrderStockTransition } from './order-actions';
 
 export async function upsertStaffMemberAction(rawInput: Record<string, unknown>) {
   await ensureDatabaseReady();
@@ -378,6 +379,37 @@ export async function dispatchCourierShipmentAction(params: {
     include: { shipment: true },
   });
   if (!order) return { ok: false, error: 'Order not found' };
+
+  // Dispatch respects the order status state machine: only READY_FOR_SHIPMENT
+  // or PROCESSING orders can be dispatched (Super Admin may dispatch from any
+  // non-terminal state to correct data); terminal states are never dispatchable.
+  const terminalStatuses: OrderStatus[] = ['CANCELLED', 'REFUNDED', 'RETURNED', 'DELIVERED'];
+  const dispatchableFrom: OrderStatus[] = ['READY_FOR_SHIPMENT', 'PROCESSING'];
+  const canDispatch =
+    !terminalStatuses.includes(order.status) &&
+    (dispatchableFrom.includes(order.status) || admin.isSuperAdmin);
+  if (!canDispatch) {
+    return {
+      ok: false,
+      error: `Cannot dispatch order ${order.orderNumber} while it is ${order.status}.`,
+    };
+  }
+
+  // Stock safety: deduct stock for orders that reached READY/PROCESSING
+  // without deduction (e.g. legacy seed rows). Normally a no-op — stock was
+  // already deducted at CONFIRMED. On insufficient stock, change nothing.
+  try {
+    await applyOrderStockTransition({
+      orderId: order.id,
+      targetStatus: 'SHIPPED',
+      performedById: admin.id,
+    });
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Stock validation failed.',
+    };
+  }
 
   const prefix =
     params.courierProvider === 'STEADFAST'

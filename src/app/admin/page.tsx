@@ -94,12 +94,23 @@ export default async function AdminDashboardPage({
       orderBy: { assignedAt: 'desc' },
     }),
     prisma.shipment.findMany({
-      where: isDeliveryOnly ? { deliveryStaffId: user.id } : {},
+      where: isDeliveryOnly
+        ? {
+            OR: [
+              { deliveryStaffId: user.id },
+              { order: { assignments: { some: { staffId: user.id } } } },
+            ],
+          }
+        : {},
       include: { order: true, deliveryStaff: true },
       orderBy: { createdAt: 'desc' },
       take: 10,
     }),
   ]);
+
+  const recentOrders = isDeliveryOnly
+    ? assignedToMe.map((a) => a.order).slice(0, 6)
+    : orders.slice(0, 6);
 
   const activeOrders = orders.filter((o) => !['CANCELLED', 'REFUNDED', 'RETURNED'].includes(o.status));
   const totalRevenue = activeOrders.reduce((acc, o) => acc + Number(o.grandTotal), 0);
@@ -401,6 +412,7 @@ export default async function AdminDashboardPage({
                       orderNumber={sh.order.orderNumber}
                       codAmount={Number(sh.codAmount)}
                       currentStatus={sh.order.status}
+                      canReturn={hasPermission(user, 'orders.cancel')}
                     />
                   </td>
                 </tr>
@@ -438,7 +450,7 @@ export default async function AdminDashboardPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E8E0D9]">
-                {orders.slice(0, 6).map((o) => (
+                {recentOrders.map((o) => (
                   <tr key={o.id} className="hover:bg-[#F5F1EE]/50">
                     <td className="py-3 px-3 font-mono font-bold text-[#567C8D] whitespace-nowrap">
                       <Link href={`/admin/orders/${o.id}`} className="hover:underline">
