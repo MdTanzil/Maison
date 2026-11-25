@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 // Explicit viewport: without this, mobile browsers fall back to rendering at
 // desktop width. (Next.js also supplies these same values by default; the
 // explicit export locks the behaviour in and makes it auditable in source.)
+// Trigger commit 25 Nov 2026: re-run the preview build after the Vercel daily deployment limit reset.
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
