@@ -89,14 +89,16 @@ export function ShippingAdminClient({
       deliveryStaffId: riderId,
     });
 
-    if (res.ok) {
-      showToast(
-        'Parcel Dispatched',
-        `${orderNumber} booked via ${provider} (Tracking: ${res.trackingNumber})`,
-        'success'
-      );
-      router.refresh();
+    if (!res.ok) {
+      showToast('Dispatch Failed', res.error, 'error');
+      return;
     }
+    showToast(
+      'Parcel Dispatched',
+      `${orderNumber} booked via ${provider} (Tracking: ${res.trackingNumber})`,
+      'success'
+    );
+    router.refresh();
   };
 
   return (
