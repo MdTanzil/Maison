@@ -29,6 +29,7 @@ import {
 import { SessionUser } from '@/lib/auth/session';
 import { logoutAction } from '@/actions/auth-actions';
 import { useStore } from '@/components/storefront/store-provider';
+import { NotificationBell } from '@/components/admin/notification-bell';
 
 interface NavItem {
   href: string;
@@ -321,6 +322,8 @@ export function AdminShell({
               )}
               <span>Bulk Memo Print</span>
             </Link>
+
+            <NotificationBell />
 
             <div className="flex items-center gap-2.5 rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-1.5">
               <div className="h-7 w-7 rounded-full bg-[#567C8D] text-white flex items-center justify-center text-xs font-bold">

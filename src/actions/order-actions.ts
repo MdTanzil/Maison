@@ -794,6 +794,23 @@ export async function assignOrderToStaffAction(params: {
     },
   });
 
+  const roleLabel =
+    params.roleType === 'DELIVERY_STAFF'
+      ? 'delivery'
+      : params.roleType === 'ORDER_PROCESSING'
+        ? 'order processing'
+        : 'moderation';
+
+  await prisma.notification.create({
+    data: {
+      userId: staff.id,
+      title: 'New order assigned',
+      message: `You have been assigned to order ${order.orderNumber} for ${roleLabel} by ${user.name}.`,
+      type: 'ORDER_ASSIGNED',
+      link: `/admin/orders/${order.id}`,
+    },
+  });
+
   if (params.roleType === 'DELIVERY_STAFF' && order.shipment) {
     await prisma.shipment.update({
       where: { id: order.shipment.id },
