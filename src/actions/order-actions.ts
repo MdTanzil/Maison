@@ -870,6 +870,19 @@ export async function unassignStaffFromOrderAction(params: {
     where: { orderId: order.id, staffId: staff.id },
   });
 
+  // The removed staff member must no longer see the assignment banner for
+  // this order: mark this order's unread ORDER_ASSIGNED notifications read.
+  // Matched by link, so other orders' notifications are untouched.
+  await prisma.notification.updateMany({
+    where: {
+      userId: staff.id,
+      type: 'ORDER_ASSIGNED',
+      isRead: false,
+      link: `/admin/orders/${order.id}`,
+    },
+    data: { isRead: true },
+  });
+
   if (wasDelivery && order.shipment && order.shipment.deliveryStaffId === staff.id) {
     await prisma.shipment.update({
       where: { id: order.shipment.id },
@@ -905,6 +918,7 @@ export async function unassignStaffFromOrderAction(params: {
     description: `Removed ${staff.name} from order ${order.orderNumber}`,
   });
 
+  revalidatePath('/admin');
   revalidatePath('/admin/orders');
   revalidatePath(`/admin/orders/${order.id}`);
   revalidatePath('/admin/staff');

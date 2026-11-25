@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -133,6 +133,14 @@ export function OrderDetailClient({
   const [assignNotes, setAssignNotes] = useState('');
   const [assigning, setAssigning] = useState(false);
 
+  // Assignments shown in "Current Assignments". Kept in local state so the
+  // list updates immediately after an unassign, even while the server
+  // re-render is still in flight; re-synced from props on every refresh.
+  const [assignments, setAssignments] = useState(order.assignments);
+  useEffect(() => {
+    setAssignments(order.assignments);
+  }, [order.assignments]);
+
   // Payment Verification & Refund
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(order.paymentStatus);
   const [trxRef, setTrxRef] = useState(order.payment?.transactionRef || '');
@@ -223,6 +231,7 @@ export function OrderDetailClient({
           `Removed ${assignment.staffName} from order ${order.orderNumber}.`,
           'success'
         );
+        setAssignments((prev) => prev.filter((a) => a.staffId !== assignment.staffId));
         router.refresh();
       },
     });
@@ -615,10 +624,10 @@ export function OrderDetailClient({
                 <span>Assign Staff Member</span>
               </LoadingButton>
 
-              {order.assignments.length > 0 && (
+              {assignments.length > 0 && (
                 <div className="pt-2 border-t border-[#E8E0D9] space-y-1.5 text-xs">
                   <p className="font-semibold text-[#2F4156]">Current Assignments:</p>
-                  {order.assignments.map((a) => (
+                  {assignments.map((a) => (
                     <div
                       key={a.id}
                       className="flex items-center justify-between gap-2 rounded-lg bg-[#F5F1EE] px-3 py-1.5"
