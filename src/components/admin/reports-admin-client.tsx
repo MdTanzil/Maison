@@ -130,13 +130,13 @@ export function ReportsAdminClient({
           <div className="h-72 w-full">
             {hasCategoryData ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryPerformance} isAnimationActive={false}>
+                <BarChart data={categoryPerformance}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E8E0D9" />
                   <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#52606D' }} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#52606D' }} />
                   <Tooltip />
-                  <Bar dataKey="sold" fill="#567C8D" name="Units Sold" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="stock" fill="#C8D9E6" name="In Stock" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="sold" fill="#567C8D" name="Units Sold" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                  <Bar dataKey="stock" fill="#C8D9E6" name="In Stock" radius={[4, 4, 0, 0]} isAnimationActive={false} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
