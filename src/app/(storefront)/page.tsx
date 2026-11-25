@@ -112,7 +112,7 @@ export default async function HomePage() {
               </div>
 
               {/* Trust Highlights */}
-              <div className="grid grid-cols-3 gap-2.5 sm:gap-4 pt-6 border-t border-[#E8E0D9]">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-4 pt-6 border-t border-[#E8E0D9]">
                 <div className="rounded-xl bg-white p-3 sm:p-3.5 border border-[#E8E0D9]">
                   <p className="text-lg font-bold text-[#2F4156]">100%</p>
                   <p className="text-xs text-[#52606D]">Certified Natural Fibers</p>
