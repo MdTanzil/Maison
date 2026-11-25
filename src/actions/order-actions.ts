@@ -838,6 +838,80 @@ export async function assignOrderToStaffAction(params: {
   return { ok: true };
 }
 
+export async function unassignStaffFromOrderAction(params: {
+  orderId: string;
+  staffId: string;
+}) {
+  await ensureDatabaseReady();
+  const user = await requireAuth();
+  if (!user.isSuperAdmin) {
+    return { ok: false, error: 'FORBIDDEN: Only a Super Admin can unassign staff.' };
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: params.orderId },
+    include: { shipment: true },
+  });
+  const staff = await prisma.user.findUnique({ where: { id: params.staffId } });
+  if (!order || !staff) {
+    return { ok: false, error: 'Order or staff member not found.' };
+  }
+
+  const assignments = await prisma.orderAssignment.findMany({
+    where: { orderId: order.id, staffId: staff.id },
+  });
+  if (assignments.length === 0) {
+    return { ok: false, error: 'This staff member is not assigned to this order.' };
+  }
+
+  const wasDelivery = assignments.some((a) => a.roleType === 'DELIVERY_STAFF');
+
+  await prisma.orderAssignment.deleteMany({
+    where: { orderId: order.id, staffId: staff.id },
+  });
+
+  if (wasDelivery && order.shipment && order.shipment.deliveryStaffId === staff.id) {
+    await prisma.shipment.update({
+      where: { id: order.shipment.id },
+      data: { deliveryStaffId: null },
+    });
+  }
+
+  const profile = await prisma.staffProfile.findUnique({
+    where: { userId: staff.id },
+  });
+  if (profile && profile.ordersAssigned > 0) {
+    await prisma.staffProfile.update({
+      where: { userId: staff.id },
+      data: { ordersAssigned: { decrement: 1 } },
+    });
+  }
+
+  await prisma.notification.create({
+    data: {
+      userId: staff.id,
+      title: 'Assignment removed',
+      message: `Your assignment to order ${order.orderNumber} has been removed by ${user.name}.`,
+      type: 'ORDER_UNASSIGNED',
+      link: `/admin/orders/${order.id}`,
+    },
+  });
+
+  await logStaffActivity({
+    user,
+    action: 'ORDER_UNASSIGNED',
+    module: 'Orders',
+    targetId: order.orderNumber,
+    description: `Removed ${staff.name} from order ${order.orderNumber}`,
+  });
+
+  revalidatePath('/admin/orders');
+  revalidatePath(`/admin/orders/${order.id}`);
+  revalidatePath('/admin/staff');
+  revalidatePath('/admin/shipping');
+  return { ok: true };
+}
+
 export async function verifyPaymentAction(params: {
   orderId: string;
   paymentStatus: PaymentStatus;
