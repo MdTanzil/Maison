@@ -55,6 +55,8 @@ export function OrdersTableClient({
   canAssign,
   canUpdateStatus,
   canDeleteOrder,
+  allowedStatusesByOrder,
+  canCancel,
 }: {
   orders: Array<{
     id: string;
@@ -80,6 +82,8 @@ export function OrdersTableClient({
   canAssign: boolean;
   canUpdateStatus: boolean;
   canDeleteOrder: boolean;
+  allowedStatusesByOrder: Record<string, OrderStatus[]>;
+  canCancel: boolean;
 }) {
   const router = useRouter();
   const { showToast } = useStore();
@@ -92,6 +96,12 @@ export function OrdersTableClient({
   const [bulkStatus, setBulkStatus] = useState<OrderStatus>('CONFIRMED');
   const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+
+  // Bulk move options: every status except REFUNDED (refund action only),
+  // and CANCELLED only for callers holding orders.cancel.
+  const BULK_STATUSES: OrderStatus[] = ORDER_STATUSES.filter(
+    (s) => s !== 'REFUNDED' && (s !== 'CANCELLED' || canCancel)
+  );
 
   const runConfirmed = async () => {
     if (!confirm) return;
@@ -160,6 +170,21 @@ export function OrdersTableClient({
             'success'
           );
           setSelectedIds([]);
+          router.refresh();
+        } else {
+          const failed =
+            (res as { failed?: Array<{ orderId: string; error: string }> }).failed ?? [];
+          const succeeded =
+            (res as { count?: number }).count ?? 0;
+          const firstError =
+            failed[0]?.error ??
+            (res as { error?: string }).error ??
+            'Update failed';
+          showToast(
+            'Bulk Status Update Incomplete',
+            `Updated ${succeeded} of ${selectedIds.length} orders. ${failed.length} failed: ${firstError}`,
+            'error'
+          );
           router.refresh();
         }
       },
@@ -349,7 +374,7 @@ export function OrdersTableClient({
                 onChange={(e) => setBulkStatus(e.target.value as OrderStatus)}
                 className="rounded-lg border border-[#E8E0D9] bg-white px-3 py-1.5 text-xs font-medium text-[#2F4156]"
               >
-                {ORDER_STATUSES.map((s) => (
+                {BULK_STATUSES.map((s) => (
                   <option key={s} value={s}>
                     Move to: {s}
                   </option>
@@ -473,7 +498,9 @@ export function OrdersTableClient({
                           }
                           className="rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-2.5 py-1.5 text-xs font-semibold text-[#2F4156] focus:border-[#567C8D]"
                         >
-                          {ORDER_STATUSES.map((s) => (
+                          {Array.from(
+                            new Set([o.status, ...(allowedStatusesByOrder[o.id] ?? [])])
+                          ).map((s) => (
                             <option key={s} value={s}>
                               {s}
                             </option>

@@ -1,8 +1,9 @@
 import React from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { OrderDetailClient } from '@/components/admin/order-detail-client';
+import { getAllowedTargetStatuses } from '@/lib/orders/status-rules';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,9 @@ export default async function AdminOrderDetailPage({
   await ensureDatabaseReady();
   const { id } = await params;
   const user = (await getCurrentUser())!;
+  if (!user || !hasPermission(user, 'orders.view')) {
+    redirect('/admin');
+  }
 
   const [order, staffUsers] = await Promise.all([
     prisma.order.findUnique({
@@ -37,8 +41,22 @@ export default async function AdminOrderDetailPage({
     notFound();
   }
 
+  const isDeliveryOnly =
+    user.roles.includes('DELIVERY_STAFF') && !user.isSuperAdmin && !hasPermission(user, 'reports.view');
+  const isAssigned =
+    order.assignments.some((a) => a.staffId === user.id) ||
+    order.shipment?.deliveryStaffId === user.id;
+  if (isDeliveryOnly && !isAssigned) {
+    redirect('/admin/orders');
+  }
+
   return (
     <OrderDetailClient
+      allowedStatuses={getAllowedTargetStatuses(order.status, {
+        permissions: user.permissions,
+        isSuperAdmin: user.isSuperAdmin,
+        isAssigned,
+      })}
       permissions={{
         canUpdateStatus:
           hasPermission(user, 'orders.update_status') ||

@@ -1,5 +1,6 @@
 import React from 'react';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { redirect } from 'next/navigation';
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { getIntegrationsStatus } from '@/lib/services/integrations';
 import { PaymentsAdminClient } from '@/components/admin/payments-admin-client';
@@ -9,6 +10,9 @@ export const dynamic = 'force-dynamic';
 export default async function AdminPaymentsPage() {
   await ensureDatabaseReady();
   const user = (await getCurrentUser())!;
+  if (!user || !hasPermission(user, 'payments.view')) {
+    redirect('/admin');
+  }
 
   const [payments, refunds] = await Promise.all([
     prisma.payment.findMany({

@@ -5,6 +5,7 @@ import { ChevronRight } from 'lucide-react';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
 import { slugify } from '@/lib/utils';
 import { ProductDetailClient } from '@/components/storefront/product-detail-client';
+import { getCurrentUser } from '@/lib/auth/session';
 import { ProductCard } from '@/components/storefront/product-card';
 
 export const dynamic = 'force-dynamic';
@@ -57,6 +58,8 @@ export default async function ProductDetailPage({
     take: 4,
   });
 
+  const sessionUser = await getCurrentUser().catch(() => null);
+
   const specs =
     product.specifications && typeof product.specifications === 'object'
       ? (product.specifications as Record<string, string>)
@@ -87,6 +90,7 @@ export default async function ProductDetailPage({
       </nav>
 
       <ProductDetailClient
+        isSignedIn={!!sessionUser}
         product={{
           id: product.id,
           title: product.title,
@@ -128,6 +132,7 @@ export default async function ProductDetailPage({
             title: r.title,
             comment: r.comment,
             createdAt: r.createdAt.toISOString(),
+            isVerifiedPurchase: r.isVerifiedPurchase && !!r.userId,
           })),
         }}
       />

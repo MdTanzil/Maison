@@ -1,11 +1,17 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { CategoriesAdminClient } from '@/components/admin/categories-admin-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminCategoriesPage() {
   await ensureDatabaseReady();
+  const user = await getCurrentUser();
+  if (!user || !hasPermission(user, 'categories.manage')) {
+    redirect('/admin');
+  }
   const [categories, brands] = await Promise.all([
     prisma.category.findMany({
       include: {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { prisma, ensureDatabaseReady } from '@/lib/db/prisma';
+import { redirect } from 'next/navigation';
 import { getCurrentUser, hasPermission } from '@/lib/auth/session';
 import { getIntegrationsStatus } from '@/lib/services/integrations';
 import { ShippingAdminClient } from '@/components/admin/shipping-admin-client';
@@ -9,9 +10,23 @@ export const dynamic = 'force-dynamic';
 export default async function AdminShippingPage() {
   await ensureDatabaseReady();
   const user = (await getCurrentUser())!;
+  if (!user || !hasPermission(user, 'orders.view')) {
+    redirect('/admin');
+  }
+
+  const isDeliveryOnly =
+    user.roles.includes('DELIVERY_STAFF') && !user.isSuperAdmin && !hasPermission(user, 'reports.view');
 
   const [shipments, shippingMethods, deliveryRiders] = await Promise.all([
     prisma.shipment.findMany({
+      where: isDeliveryOnly
+        ? {
+            OR: [
+              { deliveryStaffId: user.id },
+              { order: { assignments: { some: { staffId: user.id } } } },
+            ],
+          }
+        : {},
       include: {
         order: true,
         deliveryStaff: true,

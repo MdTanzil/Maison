@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Heart,
@@ -39,11 +40,14 @@ export interface ProductDetailReview {
   title?: string | null;
   comment: string;
   createdAt: string;
+  isVerifiedPurchase: boolean;
 }
 
 export function ProductDetailClient({
   product,
+  isSignedIn,
 }: {
+  isSignedIn: boolean;
   product: {
     id: string;
     title: string;
@@ -79,7 +83,6 @@ export function ProductDetailClient({
   const [wishing, setWishing] = useState(false);
 
   // Review state
-  const [reviewName, setReviewName] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewComment, setReviewComment] = useState('');
@@ -140,7 +143,6 @@ export function ProductDetailClient({
       rating: reviewRating,
       title: reviewTitle,
       comment: reviewComment,
-      customerName: reviewName,
     });
     setSubmittingReview(false);
     if (!res.ok) {
@@ -429,8 +431,15 @@ export function ProductDetailClient({
               {product.reviews.map((r) => (
                 <div key={r.id} className="pt-4 first:pt-0">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-[#2F4156] min-w-0">
-                      {r.customerName}
+                    <span className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm font-semibold text-[#2F4156] truncate">
+                        {r.customerName}
+                      </span>
+                      {r.isVerifiedPurchase && (
+                        <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 shrink-0">
+                          Verified Purchase
+                        </span>
+                      )}
                     </span>
                     <div className="flex items-center gap-1 text-[#567C8D] shrink-0">
                       {Array.from({ length: r.rating }).map((_, i) => (
@@ -456,21 +465,8 @@ export function ProductDetailClient({
             Share your impressions of the material, fit, and finishing.
           </p>
 
-          <form onSubmit={handleReviewSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-[#2F4156] mb-1">
-                Your Name
-              </label>
-              <input
-                type="text"
-                required
-                value={reviewName}
-                onChange={(e) => setReviewName(e.target.value)}
-                placeholder="e.g., Samira Chowdhury"
-                className="w-full rounded-lg border border-[#E8E0D9] bg-[#F5F1EE] px-3.5 py-2 text-sm"
-              />
-            </div>
-
+          {isSignedIn ? (
+            <form onSubmit={handleReviewSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-[#2F4156] mb-1">
                 Rating
@@ -521,9 +517,22 @@ export function ProductDetailClient({
               loadingText="Submitting..."
               className="h-auto w-full rounded-xl bg-[#567C8D] py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
             >
-              Publish Verified Review
+              Publish Review
             </LoadingButton>
-          </form>
+            </form>
+          ) : (
+            <div className="rounded-xl border border-[#E8E0D9] bg-[#F5F1EE] p-5 text-center space-y-3">
+              <p className="text-sm text-[#52606D]">
+                Sign in to share your experience with this piece.
+              </p>
+              <Link
+                href="/auth/login"
+                className="inline-flex items-center justify-center rounded-xl bg-[#567C8D] px-6 py-2.5 text-xs font-semibold text-white hover:bg-[#486878]"
+              >
+                Sign In
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

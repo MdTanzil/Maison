@@ -12,6 +12,7 @@ import { checkoutSchema } from '@/lib/validations/schemas';
 import { generateOrderNumber } from '@/lib/utils';
 import { logStaffActivity } from '@/lib/services/audit';
 import { OrderStatus, PaymentStatus, CourierProvider } from '@prisma/client';
+import { ORDER_TRANSITIONS, maySetStatus } from '@/lib/orders/status-rules';
 
 export async function validateCouponServerAction(params: {
   code: string;
@@ -377,7 +378,7 @@ export async function placeOrderAction(rawInput: unknown) {
   };
 }
 
-async function applyOrderStockTransition(params: {
+export async function applyOrderStockTransition(params: {
   orderId: string;
   targetStatus: OrderStatus;
   performedById: string;
@@ -550,24 +551,82 @@ export async function updateOrderStatusAction(params: {
 
   const order = await prisma.order.findUnique({
     where: { id: params.orderId },
-    include: { shipment: true, payments: true },
+    include: {
+      shipment: true,
+      payments: true,
+      assignments: { select: { staffId: true } },
+    },
   });
 
   if (!order) {
     return { ok: false, error: 'Order not found.' };
   }
 
-  try {
-    await applyOrderStockTransition({
-      orderId: order.id,
-      targetStatus: params.status,
-      performedById: user.id,
-    });
-  } catch (err) {
+  // Refunds must go through processOrderRefundAction (payments.verify) — the
+  // status action never sets REFUNDED, not even for a Super Admin.
+  if (params.status === 'REFUNDED') {
     return {
       ok: false,
-      error: err instanceof Error ? err.message : 'Stock validation failed.',
+      error: 'Refunds must be processed via the refund action on the order or payments page.',
     };
+  }
+
+  // Same-status submissions are metadata-only saves (internal notes, courier
+  // provider, tracking number): skip the transition + permission checks, the
+  // status-history entry, the timestamp stamps and the stock transition.
+  const isSameStatus = params.status === order.status;
+
+  if (!isSameStatus) {
+    // Transition allow-list (Super Admin may override it to correct a
+    // wrongly-transitioned order; every jump is still history-logged).
+    if (
+      !user.isSuperAdmin &&
+      !ORDER_TRANSITIONS[order.status].includes(params.status)
+    ) {
+      return {
+        ok: false,
+        error: `Cannot move order ${order.orderNumber} from ${order.status} to ${params.status}.`,
+      };
+    }
+
+    // Per-target permission + rider scoping.
+    const isAssigned =
+      order.assignments.some((a) => a.staffId === user.id) ||
+      order.shipment?.deliveryStaffId === user.id;
+    const hasOpsPermission =
+      hasPermission(user, 'orders.update_status') ||
+      hasPermission(user, 'orders.confirm');
+    const hasDeliveryPermission = hasPermission(user, 'delivery.update');
+    if (!hasOpsPermission && hasDeliveryPermission && !isAssigned) {
+      return { ok: false, error: 'This order is not assigned to you.' };
+    }
+    if (
+      !maySetStatus(params.status, {
+        permissions: user.permissions,
+        isSuperAdmin: user.isSuperAdmin,
+        isAssigned,
+      })
+    ) {
+      return {
+        ok: false,
+        error: 'FORBIDDEN: You do not have permission to set this status.',
+      };
+    }
+  }
+
+  if (!isSameStatus) {
+    try {
+      await applyOrderStockTransition({
+        orderId: order.id,
+        targetStatus: params.status,
+        performedById: user.id,
+      });
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : 'Stock validation failed.',
+      };
+    }
   }
 
   const now = new Date();
@@ -578,26 +637,28 @@ export async function updateOrderStatusAction(params: {
       ...(params.internalNotes !== undefined
         ? { internalNotes: params.internalNotes }
         : {}),
-      ...(params.status === 'CONFIRMED' && !order.confirmedById
+      ...(params.status === 'CONFIRMED' && !isSameStatus && !order.confirmedById
         ? { confirmedById: user.id, confirmedAt: now }
         : {}),
-      ...(params.status === 'DELIVERED' ? { deliveredAt: now } : {}),
-      ...(params.status === 'CANCELLED' ? { cancelledAt: now } : {}),
+      ...(params.status === 'DELIVERED' && !isSameStatus ? { deliveredAt: now } : {}),
+      ...(params.status === 'CANCELLED' && !isSameStatus ? { cancelledAt: now } : {}),
     },
   });
 
-  await prisma.orderStatusHistory.create({
-    data: {
-      orderId: order.id,
-      status: params.status,
-      previousStatus: order.status,
-      note:
-        params.note?.trim() ||
-        `Status updated from ${order.status} to ${params.status} by ${user.name}`,
-      changedById: user.id,
-      changedByName: user.name,
-    },
-  });
+  if (!isSameStatus) {
+    await prisma.orderStatusHistory.create({
+      data: {
+        orderId: order.id,
+        status: params.status,
+        previousStatus: order.status,
+        note:
+          params.note?.trim() ||
+          `Status updated from ${order.status} to ${params.status} by ${user.name}`,
+        changedById: user.id,
+        changedByName: user.name,
+      },
+    });
+  }
 
   if (order.shipment) {
     const shipmentStatus =
@@ -627,23 +688,18 @@ export async function updateOrderStatusAction(params: {
     });
   }
 
-  // If collected cash is recorded on delivery, update Payment & StaffProfile
+  // Record collected COD cash on the payment. Verification is a separate step
+  // (verifyPaymentAction, payments.verify) — cash alone never marks a payment
+  // verified.
   if (params.collectedCash !== undefined && Number(params.collectedCash) > 0) {
     const cashVal = Number(params.collectedCash);
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { paymentStatus: 'VERIFIED' },
-    });
     if (order.payments[0]) {
       await prisma.payment.update({
         where: { id: order.payments[0].id },
         data: {
-          status: 'VERIFIED',
           collectedCashAmount: cashVal,
           collectedById: user.id,
           collectedAt: now,
-          verifiedById: user.id,
-          verifiedAt: now,
         },
       });
     }
@@ -692,16 +748,20 @@ export async function bulkUpdateOrderStatusAction(params: {
   await ensureDatabaseReady();
   await requirePermission('orders.update_status');
 
+  const failed: Array<{ orderId: string; error: string }> = [];
+  let succeeded = 0;
   for (const orderId of params.orderIds) {
-    await updateOrderStatusAction({
+    const res = await updateOrderStatusAction({
       orderId,
       status: params.status,
       note: params.note || `Bulk status update to ${params.status}`,
     });
+    if (res.ok) succeeded++;
+    else failed.push({ orderId, error: res.error ?? 'Update failed' });
   }
 
   revalidatePath('/admin/orders');
-  return { ok: true, count: params.orderIds.length };
+  return { ok: failed.length === 0, count: succeeded, failed };
 }
 
 export async function assignOrderToStaffAction(params: {
