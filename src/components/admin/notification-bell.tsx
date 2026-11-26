@@ -105,14 +105,14 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[340px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-[#E8E0D9] bg-white shadow-xl">
+        <div className="fixed left-4 right-4 top-[5.5rem] z-50 overflow-hidden rounded-2xl border border-[#E8E0D9] bg-white shadow-xl md:absolute md:left-auto md:right-0 md:top-full md:mt-2 md:w-[340px] md:max-w-[calc(100vw-2rem)]">
           <div className="flex items-center justify-between border-b border-[#E8E0D9] px-4 py-3">
             <p className="text-sm font-semibold text-[#2F4156]">Notifications</p>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="inline-flex items-center gap-1 text-xs font-medium text-[#567C8D] hover:text-[#2F4156]"
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-[#567C8D] hover:text-[#2F4156]"
               >
                 <CheckCheck className="h-3.5 w-3.5" />
                 Mark all as read
@@ -136,7 +136,7 @@ export function NotificationBell() {
                   }`}
                 >
                   <span className="flex items-start justify-between gap-2">
-                    <span className="text-xs font-semibold text-[#2F4156]">{n.title}</span>
+                    <span className="min-w-0 text-xs font-semibold text-[#2F4156]">{n.title}</span>
                     <span className="shrink-0 text-[10px] text-[#52606D]">{formatTime(n.createdAt)}</span>
                   </span>
                   <span className="mt-1 block text-xs leading-relaxed text-[#52606D]">{n.message}</span>
